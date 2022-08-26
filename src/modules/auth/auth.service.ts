@@ -1,11 +1,39 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+
+import * as bcrypt from 'bcrypt';
+import { Repository } from 'typeorm';
+
+import { CreateUserDto, UpdateUserDto } from './dto';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+  constructor(
+    @InjectRepository(User)
+    private readonly authRepository: Repository<User>,
+  ) {}
+
+  async create(createUserDto: CreateUserDto) {
+    const { password, ...userData } = createUserDto;
+    const cryptedPassword = bcrypt.hashSync(password, 10);
+
+    try {
+      const newUser: User = await this.authRepository.create({
+        password: cryptedPassword,
+        ...userData,
+      });
+      this.authRepository.save(newUser);
+    } catch (err) {
+      console.log(err);
+
+      // if (err.code == 2) {
+
+      // }
+      throw new BadRequestException('cant create new user');
+    }
+
+    return { message: 'User Created' };
   }
 
   findAll() {
@@ -16,7 +44,7 @@ export class AuthService {
     return `This action returns a #${id} auth`;
   }
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
+  update(id: number, updateAuthDto: UpdateUserDto) {
     return `This action updates a #${id} auth`;
   }
 
