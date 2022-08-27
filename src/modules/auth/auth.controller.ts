@@ -8,15 +8,20 @@ import {
   Delete,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { UpdateUserDto, CreateUserDto } from './dto';
+import { UpdateUserDto, CreateUserDto, LogInUserDto } from './dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  @Post()
-  create(@Body() createUserDto: CreateUserDto) {
+  @Post('sign-up')
+  signUp(@Body() createUserDto: CreateUserDto) {
     return this.authService.create(createUserDto);
+  }
+
+  @Post('log-in')
+  logIn(@Body() logInUserDto: LogInUserDto) {
+    return this.authService.logIn(logInUserDto);
   }
 
   // @Get()

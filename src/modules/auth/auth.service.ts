@@ -1,47 +1,63 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
 
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
 
 import { CreateUserDto, UpdateUserDto } from './dto';
 import { User } from './entities/user.entity';
+import { LogInUserDto } from './dto/login-user.dto';
+import { JwtPayload } from './strategy/jwt.strategy';
 
 @Injectable()
 export class AuthService {
+  logger = new Logger('auth');
   constructor(
     @InjectRepository(User)
     private readonly authRepository: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
-    const { password, ...userData } = createUserDto;
-    const cryptedPassword = bcrypt.hashSync(password, 10);
-
     try {
+      const { password, ...userData } = createUserDto;
       const newUser: User = await this.authRepository.create({
-        password: cryptedPassword,
         ...userData,
+        password: bcrypt.hashSync(password, 10),
       });
       this.authRepository.save(newUser);
+      delete newUser.password;
+      return { message: 'User Created', ...newUser };
     } catch (err) {
-      console.log(err);
-
-      // if (err.code == 2) {
-
-      // }
-      throw new BadRequestException('cant create new user');
+      this.handleExceptions(err);
     }
-
-    return { message: 'User Created' };
   }
 
   findAll() {
     return `This action returns all auth`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
+  async logIn(logInUserDto: LogInUserDto) {
+    const { email, password } = logInUserDto;
+    const userDb: User = await this.authRepository.findOne({
+      where: { email },
+      select: { id: true, email: true, password: true },
+    });
+
+    if (!userDb) throw new UnauthorizedException('Credentials not valid ');
+    if (!bcrypt.compare(password, userDb.password))
+      throw new UnauthorizedException('Credentials not valid ');
+
+    delete userDb.password;
+    //todo: agregar jwt
+    return { ...userDb, token: '' };
   }
 
   update(id: number, updateAuthDto: UpdateUserDto) {
@@ -51,4 +67,24 @@ export class AuthService {
   remove(id: number) {
     return `This action removes a #${id} auth`;
   }
+
+  //#region methods
+  async checkAuthStatus(user: User) {
+    const { id, password, isActive, roles, ...userData } = user;
+    return { id, ...userData, token: this.getJwtToken({ id }) };
+  }
+
+  private getJwtToken(payload: JwtPayload) {
+    return this.jwtService.sign(payload);
+  }
+
+  private handleExceptions(err: any) {
+    if (err.code === '23505') throw new BadRequestException(err.detail);
+
+    this.logger.error(err);
+    throw new InternalServerErrorException(
+      'Unexpected error, check server logs',
+    );
+  }
+  //#endregion methods
 }
