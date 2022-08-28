@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt';
 
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
@@ -29,6 +30,7 @@ export class AuthService {
       const newUser: User = await this.authRepository.create({
         password: bcrypt.hashSync(password, 10),
         ...userData,
+        password: bcrypt.hashSync(password, 10),
       });
       await this.authRepository.save(newUser);
       delete newUser.password;
@@ -66,6 +68,24 @@ export class AuthService {
   private getJwtToken(payload: JwtPayload) {
     return this.jwtService.sign(payload);
   }
+<<<<<<< HEAD
+  // #endregion  methods
+
+  // findAll() {
+  //   return `This action returns all auth`;
+  // }
+
+  // update(id: number, updateAuthDto: UpdateUserDto) {
+  //   return `This action updates a #${id} auth`;
+  // }
+
+  // remove(id: number) {
+  //   return `This action removes a #${id} auth`;
+  // }
+=======
+
+  private handleExceptions(err: any): never {
+    if (err.code === '23505') throw new BadRequestException(err.detail);
 
   private handleExceptions(err: any): never {
     if (err.code === '23505') throw new BadRequestException(err.detail);
