@@ -5,6 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
 
 import * as bcrypt from 'bcrypt';
 import { Repository } from 'typeorm';
@@ -12,12 +13,14 @@ import { Repository } from 'typeorm';
 import { CreateUserDto, UpdateUserDto } from './dto';
 import { User } from './entities/user.entity';
 import { LogInUserDto } from './dto/login-user.dto';
+import { JwtPayload } from './strategies/jwt.strategy';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectRepository(User)
-    private readonly authRepository: Repository<User>
+    private readonly authRepository: Repository<User>,
+    private readonly jwtService: JwtService
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -42,16 +45,28 @@ export class AuthService {
       select: { password: true, email: true },
     });
     if (!user) throw new UnauthorizedException('Credentials not valid ');
-
     if (!bcrypt.compareSync(password, user.password))
       throw new UnauthorizedException('Credentials not valid ');
 
+    delete user.password;
+
     // TODO: adjuntar el jwt
-    delete user.password
-    
-    return { message: `Welcome back`, user };
+    return {
+      message: `Welcome back`,
+      ...user,
+      token: this.getJwtToken({ id: user.id }),
+    };
   }
+
+  findOne(id: string) {
+    return `This action returns a #${id} auth`;
+  }
+
   // #region  methods
+  private getJwtToken(payload: JwtPayload) {
+    return this.jwtService.sign(payload);
+  }
+
   private handleExceptions(err: any): never {
     if (err.code === '23505') throw new BadRequestException(err.detail);
 
@@ -64,10 +79,6 @@ export class AuthService {
 
   // findAll() {
   //   return `This action returns all auth`;
-  // }
-
-  // findOne(id: number) {
-  //   return `This action returns a #${id} auth`;
   // }
 
   // update(id: number, updateAuthDto: UpdateUserDto) {

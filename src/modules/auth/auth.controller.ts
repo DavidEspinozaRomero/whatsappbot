@@ -6,7 +6,9 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { LogInUserDto, UpdateUserDto, CreateUserDto } from './dto';
 
@@ -23,14 +25,19 @@ export class AuthController {
     return this.authService.login(loginUserDto);
   }
 
+  @Get('private')
+  @UseGuards(AuthGuard())
+  privateRoute() {
+    return { message: 'private' };
+    // return { user, userEmail, rawheaders, headers };
+  }
+  // @Get(':id')
+  // findOne(@Param('id') id: string) {
+  //   return this.authService.findOne(id);
+  // }
   // @Get()
   // findAll() {
   //   return this.authService.findAll();
-  // }
-
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.authService.findOne(+id);
   // }
 
   // @Patch(':id')
