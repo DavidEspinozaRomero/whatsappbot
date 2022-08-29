@@ -42,7 +42,7 @@ export class AuthService {
     const { password, email } = logInUserDto;
     const user = await this.authRepository.findOne({
       where: { email },
-      select: { password: true, email: true },
+      select: { id: true, password: true, email: true },
     });
     if (!user) throw new UnauthorizedException('Credentials not valid ');
     if (!bcrypt.compareSync(password, user.password))

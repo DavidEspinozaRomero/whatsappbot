@@ -1,5 +1,4 @@
 export { Auth } from "./auth.decorator";
-export { GetRawHeaders } from "./ger-headers.decorator";
-export { GetUser } from "./ger-user.decorator";
+export { GetUser } from "./get-user.decorator";
 export { RoleProtected } from "./role-protected.decorator";
 

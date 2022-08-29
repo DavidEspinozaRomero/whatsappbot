@@ -15,14 +15,15 @@ export class UserRoleGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(
-    context: ExecutionContext,
+    context: ExecutionContext
   ): boolean | Promise<boolean> | Observable<boolean> {
     const validRoles: string[] = this.reflector.get(
       META_ROLES,
-      context.getHandler(),
+      context.getHandler()
     );
     if (!validRoles) return true;
     if (validRoles.length === 0) return true;
+
     const req = context.switchToHttp().getRequest();
     const user = req.user as User;
 
@@ -33,6 +34,6 @@ export class UserRoleGuard implements CanActivate {
         return true;
       }
     }
-    throw new ForbiddenException(`user ${user.roles} needs a valid role`);
+    throw new ForbiddenException(`user ${user.fullName} needs a valid role `);
   }
 }

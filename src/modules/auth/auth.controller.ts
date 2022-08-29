@@ -3,14 +3,12 @@ import {
   Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import { AuthService } from './auth.service';
-import { LogInUserDto, UpdateUserDto, CreateUserDto } from './dto';
+import { Auth, GetUser } from './decorators';
+import { LogInUserDto, CreateUserDto } from './dto';
+import { User } from './entities/user.entity';
+import { ValidRoles } from './interfaces/valid-roles';
 
 @Controller('auth')
 export class AuthController {
@@ -26,27 +24,8 @@ export class AuthController {
   }
 
   @Get('private')
-  @UseGuards(AuthGuard())
-  privateRoute() {
-    return { message: 'private' };
-    // return { user, userEmail, rawheaders, headers };
+  @Auth(ValidRoles.user, ValidRoles.superUser)
+  privateRoute(@GetUser() user: User) {
+    return { message: 'private', user };
   }
-  // @Get(':id')
-  // findOne(@Param('id') id: string) {
-  //   return this.authService.findOne(id);
-  // }
-  // @Get()
-  // findAll() {
-  //   return this.authService.findAll();
-  // }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateAuthDto: UpdateUserDto) {
-  //   return this.authService.update(+id, updateAuthDto);
-  // }
-
-  // @Delete(':id')
-  // remove(@Param('id') id: string) {
-  //   return this.authService.remove(+id);
-  // }
 }
