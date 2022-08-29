@@ -57,8 +57,9 @@ export class AuthService {
     };
   }
 
-  findOne(id: string) {
-    return `This action returns a #${id} auth`;
+  async checkAuthStatus(user: User) {
+    const { id, password, isActive, roles, ...userData } = user;
+    return { id, ...userData, token: this.getJwtToken({ id }) };
   }
 
   // #region  methods
