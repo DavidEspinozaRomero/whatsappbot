@@ -4,6 +4,7 @@ import { SeedModule } from './modules/seed/seed.module';
 import { CommonModule } from './modules/common/common.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
+import { BotWebwhatsapModule } from './modules/bot-webwhatsap/bot-webwhatsap.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { ConfigModule } from '@nestjs/config';
     AuthModule,
     SeedModule,
     CommonModule,
+    BotWebwhatsapModule,
   ],
   controllers: [],
   providers: [],
