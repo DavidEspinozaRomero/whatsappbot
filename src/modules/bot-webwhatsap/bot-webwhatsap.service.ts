@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { StreamableFile } from '@nestjs/common/file-stream/streamable-file';
 
 import WAWebJS, {
   Client,
@@ -8,7 +9,9 @@ import WAWebJS, {
 } from 'whatsapp-web.js';
 import * as qrcode from 'qrcode-terminal';
 import * as fs from 'fs';
+import * as qr from 'qr-image';
 import moment from 'moment';
+import { join } from 'path';
 
 export const FORMATDATE = 'dd-MM-YYYY hh:mm';
 
@@ -21,7 +24,7 @@ export class BotWebwhatsapService {
 
   // constructor() {}
 
-  async qrcode() {
+  qrcode() {
     // fs.existsSync(this.SESSION_FILE_PATH)
     //   ? this.whitSession()
     //   : this.whitOutSession();
@@ -32,7 +35,17 @@ export class BotWebwhatsapService {
 
     this.client.initialize();
 
-    return { message: 'Client is ready!' };
+    const file = fs.createReadStream(join(process.cwd(), 'qr/i_love_qr.svg'));
+    return new StreamableFile(file);
+  }
+
+  qrimg() {
+    // const qr_svg = qr.image('I love QR!', { type: 'svg', margin: 4 });
+    const qr_svg = qr.image('I love QR!', { type: 'svg', margin: 4 });
+    qr_svg.pipe(fs.createWriteStream('qr/i_love_qr.svg'));
+
+    const file = fs.createReadStream(join(process.cwd(), 'qr/i_love_qr.svg'));
+    return new StreamableFile(file);
   }
 
   //#region methods
@@ -51,6 +64,7 @@ export class BotWebwhatsapService {
 
     this.client = new Client({});
     this.client.on('qr', (qr) => {
+      this.generateImage(qr);
       qrcode.generate(qr, { small: true });
     });
 
@@ -61,6 +75,18 @@ export class BotWebwhatsapService {
     });
   }
 
+  private generateImage(base64: string) {
+    const qr_svg = qr.image(base64, { type: 'svg', margin: 4 });
+    qr_svg.pipe(fs.createWriteStream('qr/i_love_qr.svg'));
+  }
+
+  // private generateImage(base64: string) {
+  //   const qr_img = qr.image(base64, { type: 'svg', margin: 4 });
+  //   qr_img.pipe(fs.createWriteStream('mediaSend/qr-code.svg'));
+  //   // console.log(`⚡ Recuerda que el QR se actualiza cada minuto ⚡'`);
+  //   // console.log(`⚡ Actualiza F5 el navegador para mantener el mejor QR⚡`);
+  //   // cb()
+  // }
   private authFail() {
     this.client.on('auth_failure', (err) => {
       console.log(err);

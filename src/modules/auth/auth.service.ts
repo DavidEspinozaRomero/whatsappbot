@@ -32,7 +32,11 @@ export class AuthService {
       });
       await this.authRepository.save(newUser);
       delete newUser.password;
-      return { message: 'User Created', user: { ...newUser } };
+      return {
+        message: 'User Created',
+        user: { ...newUser },
+        token: this.getJwtToken({ id: newUser.id }),
+      };
     } catch (err) {
       this.handleExceptions(err);
     }
@@ -42,7 +46,7 @@ export class AuthService {
     const { password, email } = logInUserDto;
     const user = await this.authRepository.findOne({
       where: { email },
-      select: { id: true, password: true, email: true },
+      select: { id: true, password: true, email: true, username: true },
     });
     if (!user) throw new UnauthorizedException('Credentials not valid ');
     if (!bcrypt.compareSync(password, user.password))
