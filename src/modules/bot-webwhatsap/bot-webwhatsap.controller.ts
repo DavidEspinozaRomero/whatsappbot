@@ -9,24 +9,23 @@ import {
 } from '@nestjs/common';
 import { StreamableFile } from '@nestjs/common/file-stream/streamable-file';
 
-import { createReadStream } from 'fs';
-import { join } from 'path';
-
 import { BotWebwhatsapService } from './bot-webwhatsap.service';
 
 @Controller('bot-webwhatsap')
 export class BotWebwhatsapController {
   constructor(private readonly botWebwhatsapService: BotWebwhatsapService) {}
 
+  @Get('connect')
+  connect() {
+    return this.botWebwhatsapService.connect();
+  }
+
+  
   @Get('qrcode')
   qrcode(): StreamableFile {
     return this.botWebwhatsapService.qrcode();
   }
 
-  @Get('qrimg')
-  getFile(): StreamableFile {
-    return this.botWebwhatsapService.qrimg();
-  }
   // qrimg(@Res() res: Response) {
   //   this.botWebwhatsapService.qrimg()
   //   const file = createReadStream(join(process.cwd(), 'qr/i_love_qr.png'));

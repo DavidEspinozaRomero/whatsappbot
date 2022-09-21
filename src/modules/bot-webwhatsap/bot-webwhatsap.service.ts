@@ -23,6 +23,22 @@ export class BotWebwhatsapService {
   private readonly SESSION_FILE_PATH: string = './session.json';
 
   // constructor() {}
+  connect() {
+    const client = new Client({});
+
+    client.on('qr', (qr) => {
+      console.log('QR RECEIVED', qr);
+      qrcode.generate(qr, {small: true}); // qr terminal
+    });
+
+    client.on('ready', () => {
+      console.log('Client is ready!');
+    });
+
+    client.initialize();
+
+    return { messsage: 'conected' };
+  }
 
   qrcode() {
     // fs.existsSync(this.SESSION_FILE_PATH)
@@ -34,15 +50,6 @@ export class BotWebwhatsapService {
     this.clientReady();
 
     this.client.initialize();
-
-    const file = fs.createReadStream(join(process.cwd(), 'qr/i_love_qr.svg'));
-    return new StreamableFile(file);
-  }
-
-  qrimg() {
-    // const qr_svg = qr.image('I love QR!', { type: 'svg', margin: 4 });
-    const qr_svg = qr.image('I love QR!', { type: 'svg', margin: 4 });
-    qr_svg.pipe(fs.createWriteStream('qr/i_love_qr.svg'));
 
     const file = fs.createReadStream(join(process.cwd(), 'qr/i_love_qr.svg'));
     return new StreamableFile(file);
