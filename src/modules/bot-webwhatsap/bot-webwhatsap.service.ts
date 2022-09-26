@@ -28,7 +28,7 @@ export class BotWebwhatsapService {
 
     client.on('qr', (qr) => {
       console.log('QR RECEIVED', qr);
-      qrcode.generate(qr, {small: true}); // qr terminal
+      qrcode.generate(qr, { small: true }); // qr terminal
     });
 
     client.on('ready', () => {
@@ -69,7 +69,11 @@ export class BotWebwhatsapService {
   private async whitOutSession() {
     console.log('whitOutSession');
 
-    this.client = new Client({});
+    this.client = new Client({
+      authStrategy: new LocalAuth(),
+      puppeteer: { headless: true },
+    });
+
     this.client.on('qr', (qr) => {
       this.generateImage(qr);
       qrcode.generate(qr, { small: true });

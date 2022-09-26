@@ -9,64 +9,82 @@ import {
 
 import { Server, Socket } from 'socket.io';
 import { BotwsService } from './botws.service';
-import { JwtService } from '@nestjs/jwt';
-import { JwtPayload } from '../auth/strategies/jwt.strategy';
+// import { JwtService } from '@nestjs/jwt';
+// import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 @WebSocketGateway({ cors: true, namespace: '/' })
 export class BotwsGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  constructor(private readonly botwsService: BotwsService,
-    private readonly jwtService: JwtService,) {}
+  constructor(
+    private readonly botwsService: BotwsService // private readonly jwtService: JwtService,
+  ) {}
   @WebSocketServer() wss: Server;
 
-  async handleConnection(client: Socket, ...args: any[]) {
-    const token = client.handshake.headers.authorization as string;
-    let payload: JwtPayload;
-    try {
-      payload = this.jwtService.verify(token);
-      await this.botwsService.registerClient(client, payload.id);
-    } catch (error) {
-      client.disconnect();
-      return;
-    }
+  handleConnection(client: Socket, ...args: any[]) {
+    console.log('conected');
+    
+    this.botwsService.getqrcode(client)
 
-    console.log(payload);
-
-    // console.log('Cliente conectado:', client.id);
-    // console.log({ conectados: this.botwsService.getClientsConected() });
-
-    this.wss.emit(
-      'clients-updated',
-      this.botwsService.getClientsConected(),
-    );
+    // solo al cliente
+    // setInterval(() => {
+    //   client.emit('message-from-server', {
+    //     fullName: 'soy yo',
+    //     message: 'payload.message',
+    //   });
+    // }, 2000);
   }
-  handleDisconnect(client: Socket) {
-    this.botwsService.removeClient(client.id);
-    // console.log('Cliente desconectado:', client.id);
+  handleDisconnect(client: any) {
+    console.log('disconected');
   }
 
-  @SubscribeMessage('message-from-client')
-  // @Auth()
-  // @GetUser() user: User
-  onMessageFromClient(client: Socket, payload: any) {
-    console.log(client.id, payload);
+  // async handleConnection(client: Socket, ...args: any[]) {
+  //   const token = client.handshake.headers.authorization as string;
+  //   let payload: JwtPayload;
+  //   try {
+  //     payload = this.jwtService.verify(token);
+  //     await this.botwsService.registerClient(client, payload.id);
+  //   } catch (error) {
+  //     client.disconnect();
+  //     return;
+  //   }
 
-    //solo al cliente
-    // client.emit('message-from-server', {
-    //   fullName: 'soy yo',
-    //   message: payload.message,
-    // });
+  //   console.log(payload);
 
-    //a todos menos al cliente
-    // client.broadcast.emit('message-from-server', {
-    //   fullName: this.botwsService.getUserFullName(client.id),
-    //   message: payload.message,
-    // });
+  //   // console.log('Cliente conectado:', client.id);
+  //   // console.log({ conectados: this.botwsService.getClientsConected() });
 
-    //a todos
-    this.wss.emit('message-from-server', {
-      fullName: this.botwsService.getUserFullName(client.id),
-      message: payload.message,
-    });
-  }
+  //   this.wss.emit(
+  //     'clients-updated',
+  //     this.botwsService.getClientsConected(),
+  //   );
+  // }
 
+  // handleDisconnect(client: Socket) {
+  //   this.botwsService.removeClient(client.id);
+  //   // console.log('Cliente desconectado:', client.id);
+  // }
+
+  // @SubscribeMessage('message-from-client')
+  // // @Auth()
+  // // @GetUser() user: User
+  // onMessageFromClient(client: Socket, payload: any) {
+  //   console.log(client.id, payload);
+
+  //   //solo al cliente
+  //   // client.emit('message-from-server', {
+  //   //   fullName: 'soy yo',
+  //   //   message: payload.message,
+  //   // });
+
+  //   //a todos menos al cliente
+  //   // client.broadcast.emit('message-from-server', {
+  //   //   fullName: this.botwsService.getUserFullName(client.id),
+  //   //   message: payload.message,
+  //   // });
+
+  //   //a todos
+  //   this.wss.emit('message-from-server', {
+  //     fullName: this.botwsService.getUserFullName(client.id),
+  //     message: payload.message,
+  //   });
+  // }
 }
