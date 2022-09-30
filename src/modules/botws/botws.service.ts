@@ -29,10 +29,11 @@ export class BotwsService {
   ) {}
 
   getqrcode(sio: Socket) {
-    this.client = new Client({
-      authStrategy: new LocalAuth(),
-      puppeteer: { headless: true },
-    });
+    // this.client = new Client({
+    //   authStrategy: new LocalAuth(),
+    //   puppeteer: { headless: true },
+    // });
+    this.client = new Client({});
 
     this.client.on('authenticated', (session) => {
       console.log('authenticated', session);
@@ -55,12 +56,15 @@ export class BotwsService {
 
     this.client.on('qr', (qr) => {
       // console.log('QR RECEIVED', qr);
-      this.generateImage(qr);
-      qrcode.generate(qr, { small: true }); // qr terminal
-      sio.emit('message-from-server', {
-        fullName: 'soy yo',
-        message: 'qrcode',
+      this.generateImage(qr, () => {
+        const file = fs.createReadStream(join(process.cwd(), 'qr/i_love_qr.svg'));
+        sio.emit('message-from-server', {
+          fullName: 'soy yo',
+          message: 'qrcode',
+          qr: file,
+        });
       });
+      qrcode.generate(qr, { small: true }); // qr terminal
     });
 
     this.client.on('disconnected', () => {
@@ -70,9 +74,10 @@ export class BotwsService {
     this.client.initialize();
   }
 
-  private generateImage(base64: string) {
+  private generateImage(base64: string, cb: () => void) {
     const qr_svg = qr.image(base64, { type: 'svg', margin: 4 });
     qr_svg.pipe(fs.createWriteStream('qr/i_love_qr.svg'));
+    cb();
   }
 
   private listenMessages(client: Client) {
