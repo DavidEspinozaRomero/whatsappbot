@@ -3,8 +3,11 @@ import {
   BeforeUpdate,
   Column,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
+
+import { Message } from '../../messages/entities/message.entity';
 
 @Entity('users')
 export class User {
@@ -28,6 +31,13 @@ export class User {
 
   @Column('text', { array: true, default: ['user'] })
   roles: string[];
+
+  // Relations
+  @OneToMany(() => Message, (message) => message.user)
+  message: Message[];
+
+
+  // methods
 
   @BeforeInsert()
   @BeforeUpdate()

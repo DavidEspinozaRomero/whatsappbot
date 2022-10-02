@@ -3,6 +3,7 @@ import {
   Injectable,
   InternalServerErrorException,
   UnauthorizedException,
+  Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -17,6 +18,10 @@ import { JwtPayload } from './strategies/jwt.strategy';
 
 @Injectable()
 export class AuthService {
+  //#region variables
+  private readonly logger = new Logger('AuthService');
+  //#endregion variables
+
   constructor(
     @InjectRepository(User)
     private readonly authRepository: Repository<User>,
@@ -74,7 +79,7 @@ export class AuthService {
   private handleExceptions(err: any): never {
     if (err.code === '23505') throw new BadRequestException(err.detail);
 
-    // this.logger.error(err);
+    this.logger.error(err);
     throw new InternalServerErrorException(
       'Unexpected error, check server logs'
     );
