@@ -7,7 +7,7 @@ export class Message {
   id: string;
 
   @Column('text')
-  texto: string;
+  message: string;
 
   @Column('text', {
     default: 'default',
@@ -17,7 +17,7 @@ export class Message {
   @Column('date', {
     default: new Date(),
   })
-  horary: string;
+  date: string;
 
   // Relations
   @ManyToOne(() => User, (user) => user.message)

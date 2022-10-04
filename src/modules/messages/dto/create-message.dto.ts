@@ -1,11 +1,16 @@
-import { IsDate, IsString } from "class-validator";
+import { IsDate, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateMessageDto {
+  @IsString()
+  @MinLength(2)
+  message: string;
 
   @IsString()
-  texto: string;
-  @IsString()
+  @MinLength(2)
+  @IsOptional()
   category: string;
+
+  @IsOptional()
   @IsString()
-  horary: string;
+  date: string;
 }

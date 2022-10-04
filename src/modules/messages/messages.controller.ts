@@ -1,14 +1,22 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+} from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { Auth, GetUser } from '../auth/decorators';
 import { User } from '../auth/entities/user.entity';
+import { PaginationDTO } from '../common/dto/pagination.dto';
 
 @Controller('messages')
 export class MessagesController {
-  constructor(private readonly messagesService: MessagesService,
-    ) {}
+  constructor(private readonly messagesService: MessagesService) {}
 
   @Post()
   @Auth()
@@ -17,13 +25,15 @@ export class MessagesController {
   }
 
   @Get()
-  findAll() {
-    return this.messagesService.findAll();
+  @Auth()
+  findAll(@Param() query: PaginationDTO, @GetUser() user: User) {
+    return this.messagesService.findAll(query, user);
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.messagesService.findOne(id);
+  @Auth()
+  findOne(@Param('id') id: string, @GetUser() user: User) {
+    return this.messagesService.findOne(id, user);
   }
 
   @Patch(':id')
@@ -32,7 +42,8 @@ export class MessagesController {
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.messagesService.remove(id);
+  @Auth()
+  remove(@Param('id') id: string, @GetUser() user: User) {
+    return this.messagesService.remove(id, user);
   }
 }

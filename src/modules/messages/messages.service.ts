@@ -7,11 +7,13 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Repository } from 'typeorm';
-import { User } from '../auth/entities/user.entity';
 
+import { PaginationDTO } from '../common/dto/pagination.dto';
+
+import { User } from '../auth/entities/user.entity';
+import { Message } from './entities/message.entity';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
-import { Message } from './entities/message.entity';
 
 @Injectable()
 export class MessagesService {
@@ -27,28 +29,38 @@ export class MessagesService {
     try {
       const newMessage: Message = this.messageRepository.create({
         ...createMessageDto,
-        user
+        user,
       });
       await this.messageRepository.save(newMessage);
-      delete newMessage.user
+      delete newMessage.user;
       return { message: 'mensaje agregado', ...newMessage };
     } catch (err) {
       this.handleExceptions(err);
     }
   }
 
-  async findAll() {
+  async findAll(query: PaginationDTO, user: User) {
+    const { limit = 10, offset = 0 } = query;
     try {
-      // TODO: agregar paginacion
-      const allmessages = await this.messageRepository.find();
+      const query = this.messageRepository.createQueryBuilder('messages');
+      // const whereUser = query.where({ user }).getCount()
+      query.where({ user }).skip(offset).take(limit);
+
+      const allmessages = await query.getMany();
+      // const allmessages = await this.messageRepository.find({
+      //   skip: offset,
+      //   take: limit,
+      // });
       return { message: `This action returns all messages`, data: allmessages };
     } catch (err) {
       console.log(err);
     }
   }
 
-  async findOne(id: string) {
-    const message = await this.messageRepository.findOne({ where: { id } });
+  async findOne(id: string, user: User) {
+    const message = await this.messageRepository.findOne({
+      where: { id },
+    });
 
     if (!message) throw new NotFoundException('message not found');
 
@@ -65,12 +77,10 @@ export class MessagesService {
     return { message: `This action updates a #${id} message`, data: msg };
   }
 
-  async remove(id: string) {
-    // const message = this.messageRepository.remove
+  async remove(id: string, user: User) {
     const message = await this.messageRepository.delete(id);
     if (!message.affected)
       throw new NotFoundException(`not found task whit id: ${id}`);
-    return { message: `This action removes a #${id} message` };
   }
 
   // #region methods
