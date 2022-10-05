@@ -73,8 +73,12 @@ export class MessagesService {
       ...updateMessageDto,
     });
     if (!msg) throw new NotFoundException(`Product whit #${id} not found`);
-
-    return { message: `This action updates a #${id} message`, data: msg };
+    try {
+      await this.messageRepository.save(msg);
+      return { message: `This action updates a #${id} message`, data: msg };
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   async remove(id: string, user: User) {
