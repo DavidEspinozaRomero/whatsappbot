@@ -10,7 +10,6 @@ import WAWebJS, {
 import * as qrcode from 'qrcode-terminal';
 import * as fs from 'fs';
 import * as qr from 'qr-image';
-import moment from 'moment';
 import { join } from 'path';
 
 export const FORMATDATE = 'dd-MM-YYYY hh:mm';
@@ -134,7 +133,6 @@ export class BotWebwhatsapService {
 
   private historyMesages(number: string, message: string) {
     // TODO: guardar en base
-    const today = moment().format(FORMATDATE);
   }
 
   //#emdregion methods

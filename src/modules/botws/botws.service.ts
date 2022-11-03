@@ -14,50 +14,94 @@ import WAWebJS, {
 import * as qrcode from 'qrcode-terminal';
 import * as fs from 'fs';
 import * as qr from 'qr-image';
-import moment from 'moment';
 import { join } from 'path';
 
 import { User } from '../auth/entities/user.entity';
 @Injectable()
 export class BotwsService {
+  //#region
+  //#endregion
+  //#region variables
   private conectedClients: ConectedClients = {};
   client: Client;
+  //#endregion variables
 
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>
   ) {}
 
-  getqrcode(sio: Socket) {
-    // this.client = new Client({
-    //   authStrategy: new LocalAuth(),
-    //   puppeteer: { headless: true },
-    // });
-    this.client = new Client({});
+  connectWhitWAW(sio: Socket) {
+    this.client = new Client({
+      // authStrategy: new LocalAuth({ dataPath: './sessions/', clientId: 'bot' }),
+      authStrategy: new LocalAuth(),
+      puppeteer: { headless: true },
+    });
 
-    this.client.on('authenticated', (session) => {
+    this.clientAuthenticated(this.client);
+    this.clientReady(this.client, sio);
+    this.clientQr(this.client, sio);
+    this.clientDisconect();
+
+    this.client.initialize();
+  }
+
+  //#region methods
+
+  private clientAuthenticated(client: Client) {
+    client.on('authenticated', (session) => {
       console.log('authenticated', session);
     });
+  }
 
-    this.client.on('message', (msg) => {
-      console.log(msg);
-      const { from, to, body, reply } = msg;
-      this.client.sendMessage(from, 'Message');
-      // msg.reply(from, 'Reply')
+  private listenMessages(client: Client): void {
+    console.log('Listen!');
+    client.on('message', async (msg) => {
+      const contact: WAWebJS.Contact = await msg.getContact();
+      console.log(contact);
+
+      // TODO: agregar metodo para diferenciar cuando enviar mensajes
+
+      if (contact.isGroup) {
+        return
+      }
+
+      // console.log(msg);
+      const { from, to, body, reply, hasMedia } = msg;
+      // TODO: agregar un metodo para la media files
+      if (hasMedia) {
+        console.log('hasMedia');
+
+        // const media = await msg.downloadMedia();
+        // do something with the media data here
+      }
+
+      // this.sendMediaMessage(client, from, 'audio1.mp3');
+      // this.sendMediaURL(client, from, 'https://randomuser.me/api/portraits/women/0.jpg');
+      this.sendMessage(client, from, `Hello @${contact.shortName}`);
+      // this.sendMessage(client, from, `Hello`);
+      // TODO: agregar metodo de reply
+      // msg.reply('test')
     });
+  }
 
-    this.client.on('ready', () => {
+  private clientReady(client: Client, sio: Socket): void {
+    client.on('ready', () => {
       console.log('Client is ready!');
+      this.listenMessages(client);
       sio.emit('message-from-server', {
         fullName: 'soy yo',
         message: 'client ready',
       });
     });
+  }
 
+  private clientQr(client: Client, sio: Socket): void {
     this.client.on('qr', (qr) => {
-      // console.log('QR RECEIVED', qr);
       this.generateImage(qr, () => {
-        const file = fs.createReadStream(join(process.cwd(), 'qr/i_love_qr.svg'));
+        const file = fs.createReadStream(
+          join(process.cwd(), 'qr/i_love_qr.svg')
+        );
         sio.emit('message-from-server', {
           fullName: 'soy yo',
           message: 'qrcode',
@@ -66,12 +110,36 @@ export class BotwsService {
       });
       qrcode.generate(qr, { small: true }); // qr terminal
     });
+  }
 
+  private clientDisconect(): void {
     this.client.on('disconnected', () => {
       console.log('Client is disconnected!');
     });
+  }
 
-    this.client.initialize();
+  
+
+  private sendMessage(client: Client, to: string, message: string): void {
+    client.sendMessage(to, message);
+  }
+
+  private sendMediaMessage(client: Client, to: string, filename: string): void {
+    // TODO: agregar direccion de archivo variable
+    const media = MessageMedia.fromFilePath(`./media/${filename}`);
+    // const options: WAWebJS.MessageSendOptions;
+    client.sendMessage(to, media, { sendAudioAsVoice: true });
+  }
+
+  private async sendMediaURL(
+    client: Client,
+    to: string,
+    url: string
+  ): Promise<void> {
+    // TODO: agregar direccion de archivo variable
+    const media = await MessageMedia.fromUrl(url);
+    // const options: WAWebJS.MessageSendOptions;
+    client.sendMessage(to, media);
   }
 
   private generateImage(base64: string, cb: () => void) {
@@ -80,14 +148,7 @@ export class BotwsService {
     cb();
   }
 
-  private listenMessages(client: Client) {
-    client.on('message', (msg) => {
-      console.log(msg);
-      const { from, to, body, reply } = msg;
-      client.sendMessage(from, 'Message');
-      // msg.reply(from, 'Reply')
-    });
-  }
+  //#endregion methods
 
   async registerClient(client: Socket, userId: string) {
     const user = await this.userRepository.findOneBy({ id: userId });
@@ -122,6 +183,7 @@ export class BotwsService {
   }
 }
 
+//#region interfaces
 interface ConectedClients {
   [id: string]: {
     socket: Socket;
@@ -130,3 +192,4 @@ interface ConectedClients {
     // descktop?: boolean;
   };
 }
+//#endregion interfaces

@@ -13,8 +13,13 @@ export class Message {
     default: 'default',
   })
   category: string;
+  
+  @Column('bool', {
+    default: false,
+  })
+  type: boolean;
 
-  @Column('date', {
+  @Column('timestamp with time zone', {
     default: new Date(),
   })
   date: string;

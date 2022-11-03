@@ -7,9 +7,10 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 
-import { Server, Socket } from 'socket.io';
-import { BotwsService } from './botws.service';
 // import { JwtService } from '@nestjs/jwt';
+import { Server, Socket } from 'socket.io';
+
+import { BotwsService } from './botws.service';
 // import { JwtPayload } from '../auth/strategies/jwt.strategy';
 
 @WebSocketGateway({ cors: true, namespace: '/' })
@@ -20,18 +21,9 @@ export class BotwsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() wss: Server;
 
   handleConnection(client: Socket, ...args: any[]) {
-    console.log('conected');
-    
-    this.botwsService.getqrcode(client)
-
-    // solo al cliente
-    // setInterval(() => {
-    //   client.emit('message-from-server', {
-    //     fullName: 'soy yo',
-    //     message: 'payload.message',
-    //   });
-    // }, 2000);
+    this.botwsService.connectWhitWAW(client);
   }
+
   handleDisconnect(client: any) {
     console.log('disconected');
   }
