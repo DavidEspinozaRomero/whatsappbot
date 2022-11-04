@@ -31,6 +31,8 @@ export class BotwsService {
     private readonly userRepository: Repository<User>
   ) {}
 
+  //#region methods
+
   connectWhitWAW(sio: Socket) {
     this.client = new Client({
       // authStrategy: new LocalAuth({ dataPath: './sessions/', clientId: 'bot' }),
@@ -46,8 +48,6 @@ export class BotwsService {
     this.client.initialize();
   }
 
-  //#region methods
-
   private clientAuthenticated(client: Client) {
     client.on('authenticated', (session) => {
       console.log('authenticated', session);
@@ -58,30 +58,22 @@ export class BotwsService {
     console.log('Listen!');
     client.on('message', async (msg) => {
       const contact: WAWebJS.Contact = await msg.getContact();
-      console.log(contact);
+      // console.log(contact);
 
-      // TODO: agregar metodo para diferenciar cuando enviar mensajes
+      // TODO: diferenciar cuando enviar mensajes
 
       if (contact.isGroup) {
-        return
+        return;
       }
 
-      // console.log(msg);
-      const { from, to, body, reply, hasMedia } = msg;
-      // TODO: agregar un metodo para la media files
-      if (hasMedia) {
-        console.log('hasMedia');
+      // TODO: agregar un metodo para almacenamiento de media files
+      // if (hasMedia) {
+      //   console.log('hasMedia');
 
-        // const media = await msg.downloadMedia();
-        // do something with the media data here
-      }
-
-      // this.sendMediaMessage(client, from, 'audio1.mp3');
-      // this.sendMediaURL(client, from, 'https://randomuser.me/api/portraits/women/0.jpg');
-      this.sendMessage(client, from, `Hello @${contact.shortName}`);
-      // this.sendMessage(client, from, `Hello`);
-      // TODO: agregar metodo de reply
-      // msg.reply('test')
+      //   // const media = await msg.downloadMedia();
+      //   // do something with the media data here
+      // }
+      this.buildMessage(client, msg);
     });
   }
 
@@ -118,28 +110,67 @@ export class BotwsService {
     });
   }
 
-  
+  // getDBResponse() {
 
-  private sendMessage(client: Client, to: string, message: string): void {
-    client.sendMessage(to, message);
+  // }
+
+  // TODO: agregar metodo para almacenar media
+  // private storageMedia() {}
+
+  // TODO: agregar metodo para diferenciar cuando enviar mensajes
+  private async buildMessage(client: Client, msg: WAWebJS.Message) {
+    const { from, to, body, reply, hasMedia } = msg;
+    console.log(body);
+
+    // TODO: llamar a la api para responder segun el texto
+    if (body.includes('link')) {
+      this.sendMessage(client, from, 'https://youtu.be/6CwIB6pQoPo');
+      return;
+    }
+    if (body.includes('saludo')) {
+      // texto
+      // agregar un metodo para responder segun el texto
+      const contact: WAWebJS.Contact = await msg.getContact();
+      this.sendMessage(client, from, `Hello ${contact.shortName}`);
+      return;
+    }
+    if (body.includes('imagen')) {
+      // img
+      const DBresponse = 'img1.png';
+      const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
+      this.sendMessage(client, from, media);
+      return;
+    }
+    if (body.includes('audio')) {
+      // audio
+      const DBresponse = 'audio1.mp3';
+      const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
+      this.sendMessage(client, from, media);
+      return;
+    }
+    if (body.includes('url')) {
+      // url
+      const DBresponse = 'https://randomuser.me/api/portraits/women/0.jpg';
+      const media = await MessageMedia.fromUrl(DBresponse);
+      this.sendMessage(client, from, media);
+      return;
+    }
+
+    this.sendMessage(
+      client,
+      from,
+      'Escribe saludo/imagen/audio/url para el mensaje deseado'
+    );
   }
 
-  private sendMediaMessage(client: Client, to: string, filename: string): void {
-    // TODO: agregar direccion de archivo variable
-    const media = MessageMedia.fromFilePath(`./media/${filename}`);
-    // const options: WAWebJS.MessageSendOptions;
-    client.sendMessage(to, media, { sendAudioAsVoice: true });
-  }
+  // TODO: agregar metodo de reply
 
-  private async sendMediaURL(
+  private sendMessage(
     client: Client,
     to: string,
-    url: string
-  ): Promise<void> {
-    // TODO: agregar direccion de archivo variable
-    const media = await MessageMedia.fromUrl(url);
-    // const options: WAWebJS.MessageSendOptions;
-    client.sendMessage(to, media);
+    message: string | WAWebJS.MessageMedia
+  ): void {
+    client.sendMessage(to, message);
   }
 
   private generateImage(base64: string, cb: () => void) {
