@@ -12,12 +12,15 @@ import { Server, Socket } from 'socket.io';
 
 import { BotwsService } from './botws.service';
 // import { JwtPayload } from '../auth/strategies/jwt.strategy';
+import { MessagesService } from '../messages/messages.service';
 
 @WebSocketGateway({ cors: true, namespace: '/' })
 export class BotwsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly botwsService: BotwsService // private readonly jwtService: JwtService,
-  ) {}
+  ) // private readonly messagesService: MessagesService
+
+  {}
   @WebSocketServer() wss: Server;
 
   handleConnection(client: Socket, ...args: any[]) {

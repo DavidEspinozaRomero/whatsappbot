@@ -13,6 +13,7 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 import { Auth, GetUser } from '../auth/decorators';
 import { User } from '../auth/entities/user.entity';
 import { PaginationDTO } from '../common/dto/pagination.dto';
+import { CreateQueryMessageDto } from './dto/create-query-message.dto';
 
 @Controller('messages')
 export class MessagesController {
@@ -24,10 +25,22 @@ export class MessagesController {
     return this.messagesService.create(createMessageDto, user);
   }
 
+  @Post('/query')
+  @Auth()
+  createQuery(@Body() createQueryMessageDto: CreateQueryMessageDto, @GetUser() user: User) {
+    return this.messagesService.createQuery(createQueryMessageDto, user);
+  }
+
   @Get()
   @Auth()
   findAll(@Param() query: PaginationDTO, @GetUser() user: User) {
     return this.messagesService.findAll(query, user);
+  }
+
+  @Get('/find-queries')
+  @Auth()
+  findQueriesAll(@Param() query: PaginationDTO, @GetUser() user: User) {
+    return this.messagesService.findQueriesAll(query, user);
   }
 
   @Get(':id')

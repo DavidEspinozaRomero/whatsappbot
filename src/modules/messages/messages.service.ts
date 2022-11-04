@@ -6,14 +6,17 @@ import {
 } from '@nestjs/common/exceptions';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 
 import { PaginationDTO } from '../common/dto/pagination.dto';
 
 import { User } from '../auth/entities/user.entity';
 import { Message } from './entities/message.entity';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
+import {
+  CreateMessageDto,
+  UpdateMessageDto,
+  CreateQueryMessageDto,
+} from './dto';
 
 @Injectable()
 export class MessagesService {
@@ -41,12 +44,30 @@ export class MessagesService {
     }
   }
 
+  async createQuery(createQueryMessageDto: CreateQueryMessageDto, user: User) {
+    try {
+      const newMessage: Message = this.messageRepository.create({
+        ...createQueryMessageDto,
+        type: { id: 3 },
+        user,
+      });
+      await this.messageRepository.save(newMessage);
+      delete newMessage.user;
+      return { message: 'mensaje agregado', ...newMessage };
+    } catch (err) {
+      this.handleExceptions(err);
+    }
+  }
+
   async findAll(query: PaginationDTO, user: User) {
     const { limit = 10, offset = 0 } = query;
     try {
       const query = this.messageRepository.createQueryBuilder('messages');
-      // const whereUser = query.where({ user }).getCount()
-      query.where({ user }).skip(offset).take(limit);
+      query
+        .where({ user })
+        .skip(offset)
+        .take(limit)
+        .andWhere({ type: Not(3) });
 
       const allmessages = await query.getMany();
       // const allmessages = await this.messageRepository.find({
@@ -54,6 +75,23 @@ export class MessagesService {
       //   take: limit,
       // });
       return { message: `This action returns all messages`, data: allmessages };
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async findQueriesAll(query: PaginationDTO, user: User) {
+    const { limit = 10, offset = 0 } = query;
+    try {
+      const query = this.messageRepository.createQueryBuilder('messages');
+      query
+        .where({ user })
+        .skip(offset)
+        .take(limit)
+        .andWhere({ type: 3 });
+
+      const allqueries = await query.getMany();
+      return { message: `This action returns all queries`, data: allqueries };
     } catch (err) {
       console.log(err);
     }

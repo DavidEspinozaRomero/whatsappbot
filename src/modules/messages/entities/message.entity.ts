@@ -28,12 +28,7 @@ export class Message {
   })
   category: string;
 
-  // @Column('bool', {
-  //   default: false,
-  // })
-  // type: boolean;
-
-  @Column('timestamp with time zone', {
+  @Column('text', {
     default: null,
   })
   date: string;
@@ -43,10 +38,7 @@ export class Message {
   @ManyToOne(() => User, (user) => user.message)
   user: User;
 
-  @ManyToOne(() => TypeMessage, {
-    cascade: true,
-    eager: true,
-  })
+  @ManyToOne(() => TypeMessage)
   type: TypeMessage;
 
   // contactos

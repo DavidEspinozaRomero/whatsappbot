@@ -12,9 +12,7 @@ export class TypeMessage {
   //#endregion Columns
 
   //#region Relations
-  @OneToMany(() => Message, (message) => message.type, {
-    onDelete: 'CASCADE',
-  })
+  @OneToMany(() => Message, (message) => message.type)
   message: Message;
 
   // contactos
