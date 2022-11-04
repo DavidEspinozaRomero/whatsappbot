@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  JoinColumn,
   ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -27,10 +28,10 @@ export class Message {
   })
   category: string;
 
-  @Column('bool', {
-    default: false,
-  })
-  type: boolean;
+  // @Column('bool', {
+  //   default: false,
+  // })
+  // type: boolean;
 
   @Column('timestamp with time zone', {
     default: null,
@@ -42,11 +43,11 @@ export class Message {
   @ManyToOne(() => User, (user) => user.message)
   user: User;
 
-  @OneToOne(() => TypeMessage, (typeMessage) => typeMessage.message, {
+  @ManyToOne(() => TypeMessage, {
     cascade: true,
     eager: true,
   })
-  typeMessage: TypeMessage;
+  type: TypeMessage;
 
   // contactos
   //#endregion Relations

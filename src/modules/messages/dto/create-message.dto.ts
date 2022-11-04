@@ -1,4 +1,4 @@
-import { IsBoolean, IsDate, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsDate, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateMessageDto {
   @IsString()
@@ -10,9 +10,9 @@ export class CreateMessageDto {
   @IsOptional()
   category: string;
 
-  @IsBoolean()
+  @IsNumber()
   @IsOptional()
-  type: boolean;
+  type: number;
 
   @IsOptional()
   @IsString()

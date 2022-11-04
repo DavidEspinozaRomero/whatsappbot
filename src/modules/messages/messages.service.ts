@@ -27,8 +27,10 @@ export class MessagesService {
 
   async create(createMessageDto: CreateMessageDto, user: User) {
     try {
+      const type = { id: createMessageDto.type };
       const newMessage: Message = this.messageRepository.create({
         ...createMessageDto,
+        type,
         user,
       });
       await this.messageRepository.save(newMessage);
@@ -68,11 +70,13 @@ export class MessagesService {
   }
 
   async update(id: string, updateMessageDto: UpdateMessageDto) {
+    const type = { id: updateMessageDto.type };
     const msg = await this.messageRepository.preload({
       id,
       ...updateMessageDto,
+      type,
     });
-    if (!msg) throw new NotFoundException(`Product whit #${id} not found`);
+    if (!msg) throw new NotFoundException(`Message whit #${id} not found`);
     try {
       await this.messageRepository.save(msg);
       return { message: `This action updates a #${id} message`, data: msg };

@@ -58,11 +58,14 @@ export class BotwsService {
     console.log('Listen!');
     client.on('message', async (msg) => {
       const contact: WAWebJS.Contact = await msg.getContact();
-      // console.log(contact);
+      const info = await msg.getInfo();
+      const chat = await msg.getChat();
+
+      console.log(chat.isGroup);
 
       // TODO: diferenciar cuando enviar mensajes
 
-      if (contact.isGroup) {
+      if (chat.isGroup) {
         return;
       }
 
@@ -73,7 +76,7 @@ export class BotwsService {
       //   // const media = await msg.downloadMedia();
       //   // do something with the media data here
       // }
-      this.buildMessage(client, msg);
+      // this.buildMessage(client, msg);
     });
   }
 
