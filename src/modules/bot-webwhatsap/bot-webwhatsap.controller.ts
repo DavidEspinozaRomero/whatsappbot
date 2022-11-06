@@ -8,29 +8,20 @@ import {
   Delete,
 } from '@nestjs/common';
 import { StreamableFile } from '@nestjs/common/file-stream/streamable-file';
-
+import { Auth, GetUser } from '../auth/decorators';
 import { BotWebwhatsapService } from './bot-webwhatsap.service';
+import { User } from '../auth/entities/user.entity';
 
 @Controller('bot-webwhatsap')
 export class BotWebwhatsapController {
   constructor(private readonly botWebwhatsapService: BotWebwhatsapService) {}
 
-  @Get('connect')
-  connect() {
-    return this.botWebwhatsapService.connect();
-  }
-
-  
   @Get('qrcode')
-  qrcode(): StreamableFile {
-    return this.botWebwhatsapService.qrcode();
+  @Auth()
+  qrcode(@GetUser() user: User): StreamableFile {
+    console.log(user);
+    return this.botWebwhatsapService.qrcode(user);
   }
-
-  // qrimg(@Res() res: Response) {
-  //   this.botWebwhatsapService.qrimg()
-  //   const file = createReadStream(join(process.cwd(), 'qr/i_love_qr.png'));
-  //   file.pipe(res);
-  // }
 
   // @Post('')
   // create(@Body() createBotWebwhatsapDto: CreateBotWebwhatsapDto) {

@@ -3,14 +3,7 @@ import { Socket } from 'socket.io';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { StreamableFile } from '@nestjs/common/file-stream/streamable-file';
-
-import WAWebJS, {
-  Client,
-  ClientSession,
-  LocalAuth,
-  MessageMedia,
-} from 'whatsapp-web.js';
+import WAWebJS, { Client, LocalAuth, MessageMedia } from 'whatsapp-web.js';
 import * as qrcode from 'qrcode-terminal';
 import * as fs from 'fs';
 import * as qr from 'qr-image';
@@ -33,16 +26,18 @@ export class BotwsService {
 
   //#region methods
 
-  connectWhitWAW(sio: Socket) {
+  connectWhitWAW(sio: Socket, user: User) {
     this.client = new Client({
-      // authStrategy: new LocalAuth({ dataPath: './sessions/', clientId: 'bot' }),
-      authStrategy: new LocalAuth(),
+      authStrategy: new LocalAuth({
+        dataPath: './sessions/',
+        clientId: user.id,
+      }),
       puppeteer: { headless: true },
     });
 
     this.clientAuthenticated(this.client);
     this.clientReady(this.client, sio);
-    this.clientQr(this.client, sio);
+    this.clientQr(this.client, sio, user.id);
     this.clientDisconect();
 
     this.client.initialize();
@@ -57,8 +52,8 @@ export class BotwsService {
   private listenMessages(client: Client): void {
     console.log('Listen!');
     client.on('message', async (msg) => {
-      const contact: WAWebJS.Contact = await msg.getContact();
-      const info = await msg.getInfo();
+      // const contact: WAWebJS.Contact = await msg.getContact();
+      // const info = await msg.getInfo();
       const chat = await msg.getChat();
 
       console.log(chat.isGroup);
@@ -82,28 +77,28 @@ export class BotwsService {
 
   private clientReady(client: Client, sio: Socket): void {
     client.on('ready', () => {
-      console.log('Client is ready!');
       this.listenMessages(client);
-      sio.emit('message-from-server', {
-        fullName: 'soy yo',
-        message: 'client ready',
-      });
+      const payload = {
+        action: 'ready',
+        description: 'Client is ready!',
+      };
+      sio.emit('message-from-server', payload);
     });
   }
 
-  private clientQr(client: Client, sio: Socket): void {
+  private clientQr(client: Client, sio: Socket, userId: string | number): void {
     this.client.on('qr', (qr) => {
-      this.generateImage(qr, () => {
-        const file = fs.createReadStream(
-          join(process.cwd(), 'qr/i_love_qr.svg')
-        );
-        sio.emit('message-from-server', {
-          fullName: 'soy yo',
-          message: 'qrcode',
-          qr: file,
-        });
+      this.generateImage(qr, userId, () => {
+        const payload = {
+          action: 'download',
+          description: 'download qrcode',
+        };
+        sio.emit('message-from-server', payload);
+        setTimeout(() => {
+          this.deleteFile('qr', `${userId}.svg`);
+        }, 1000);
       });
-      qrcode.generate(qr, { small: true }); // qr terminal
+      // qrcode.generate(qr, { small: true }); // qr terminal
     });
   }
 
@@ -113,7 +108,13 @@ export class BotwsService {
     });
   }
 
-  // getDBResponse() {
+  private deleteFile(dir: string, pathFile: string) {
+    const filePath = `${dir}/${pathFile}`;
+    fs.unlinkSync(filePath);
+    console.log('removed', pathFile);
+  }
+
+  // getDBQuestionAnswer() {
 
   // }
 
@@ -176,9 +177,13 @@ export class BotwsService {
     client.sendMessage(to, message);
   }
 
-  private generateImage(base64: string, cb: () => void) {
+  private generateImage(
+    base64: string,
+    userId: string | number,
+    cb: () => void
+  ) {
     const qr_svg = qr.image(base64, { type: 'svg', margin: 4 });
-    qr_svg.pipe(fs.createWriteStream('qr/i_love_qr.svg'));
+    qr_svg.pipe(fs.createWriteStream(`qr/${userId}.svg`));
     cb();
   }
 
@@ -191,6 +196,7 @@ export class BotwsService {
     if (!user.isActive) throw new Error('user not active');
     this.checkUserConnection(user);
     this.conectedClients[client.id] = { socket: client, user };
+    this.connectWhitWAW(client, user);
   }
 
   removeClient(clientId: string) {

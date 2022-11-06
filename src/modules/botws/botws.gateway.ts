@@ -13,21 +13,33 @@ import { Server, Socket } from 'socket.io';
 import { BotwsService } from './botws.service';
 // import { JwtPayload } from '../auth/strategies/jwt.strategy';
 import { MessagesService } from '../messages/messages.service';
+import { Auth, GetUser } from '../auth/decorators';
+import { User } from '../auth/entities/user.entity';
+import { JwtPayload } from '../auth/strategies/jwt.strategy';
+import { JwtService } from '@nestjs/jwt';
 
 @WebSocketGateway({ cors: true, namespace: '/' })
 export class BotwsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
-    private readonly botwsService: BotwsService // private readonly jwtService: JwtService,
-  ) // private readonly messagesService: MessagesService
+    private readonly botwsService: BotwsService,
+    private readonly jwtService: JwtService // private readonly messagesService: MessagesService
+  ) {}
 
-  {}
   @WebSocketServer() wss: Server;
-
-  handleConnection(client: Socket, ...args: any[]) {
-    this.botwsService.connectWhitWAW(client);
+  async handleConnection(client: Socket, ...args: any[]) {
+    const token = client.handshake.headers.authorization;
+    let payload: JwtPayload;
+    try {
+      payload = this.jwtService.verify(token);
+      await this.botwsService.registerClient(client, payload.id);
+    } catch (error) {
+      client.disconnect();
+      return;
+    }
   }
 
   handleDisconnect(client: any) {
+    this.botwsService.removeClient(client.id);
     console.log('disconected');
   }
 
