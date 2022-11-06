@@ -71,7 +71,7 @@ export class BotwsService {
       //   // const media = await msg.downloadMedia();
       //   // do something with the media data here
       // }
-      // this.buildMessage(client, msg);
+      this.buildMessage(client, msg);
     });
   }
 

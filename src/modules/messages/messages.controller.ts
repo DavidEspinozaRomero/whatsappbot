@@ -14,6 +14,7 @@ import { Auth, GetUser } from '../auth/decorators';
 import { User } from '../auth/entities/user.entity';
 import { PaginationDTO } from '../common/dto/pagination.dto';
 import { CreateQueryMessageDto } from './dto/create-query-message.dto';
+import { ValidRoles } from '../auth/interfaces/valid-roles';
 
 @Controller('messages')
 export class MessagesController {
@@ -27,7 +28,10 @@ export class MessagesController {
 
   @Post('/query')
   @Auth()
-  createQuery(@Body() createQueryMessageDto: CreateQueryMessageDto, @GetUser() user: User) {
+  createQuery(
+    @Body() createQueryMessageDto: CreateQueryMessageDto,
+    @GetUser() user: User
+  ) {
     return this.messagesService.createQuery(createQueryMessageDto, user);
   }
 
@@ -41,6 +45,17 @@ export class MessagesController {
   @Auth()
   findQueriesAll(@Param() query: PaginationDTO, @GetUser() user: User) {
     return this.messagesService.findQueriesAll(query, user);
+  }
+
+  @Get('/get-types')
+  @Auth(ValidRoles.user)
+  getAllTypes() {
+    return this.messagesService.getTypes();
+  }
+  @Get('/get-categories')
+  @Auth(ValidRoles.user)
+  getAllCategories() {
+    return this.messagesService.getCategories();
   }
 
   @Get(':id')

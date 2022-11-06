@@ -8,7 +8,7 @@ export class CreateMessageDto {
   @IsString()
   @MinLength(2)
   @IsOptional()
-  category: string;
+  category: number;
 
   @IsNumber()
   @IsOptional()

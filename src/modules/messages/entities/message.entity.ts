@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
+import { Category } from './category.entity';
 import { TypeMessage } from './typeMessage.entity';
 
 @Entity('messages')
@@ -23,10 +24,10 @@ export class Message {
   @Column('text')
   message: string;
 
-  @Column('text', {
-    default: 'default',
-  })
-  category: string;
+  // @Column('text', {
+  //   default: 'default',
+  // })
+  // category: string;
 
   @Column('text', {
     default: null,
@@ -38,9 +39,11 @@ export class Message {
   @ManyToOne(() => User, (user) => user.message)
   user: User;
 
-  @ManyToOne(() => TypeMessage)
+  @ManyToOne(() => TypeMessage, type => type.description)
   type: TypeMessage;
-
+  
+  @ManyToOne(() => Category, category => category.description)
+  category: Category;
   // contactos
   //#endregion Relations
 

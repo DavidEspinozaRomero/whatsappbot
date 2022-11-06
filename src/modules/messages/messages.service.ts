@@ -17,6 +17,8 @@ import {
   UpdateMessageDto,
   CreateQueryMessageDto,
 } from './dto';
+import { TypeMessage } from './entities/typeMessage.entity';
+import { Category } from './entities/category.entity';
 
 @Injectable()
 export class MessagesService {
@@ -25,15 +27,21 @@ export class MessagesService {
   //#endregion variables
   constructor(
     @InjectRepository(Message)
-    private readonly messageRepository: Repository<Message>
+    private readonly messageRepository: Repository<Message>,
+    @InjectRepository(TypeMessage)
+    private readonly typeMessageRepository: Repository<TypeMessage>,
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>
   ) {}
 
   async create(createMessageDto: CreateMessageDto, user: User) {
     try {
       const type = { id: createMessageDto.type };
+      const category = { id: createMessageDto.category };
       const newMessage: Message = this.messageRepository.create({
         ...createMessageDto,
         type,
+        category,
         user,
       });
       await this.messageRepository.save(newMessage);
@@ -48,6 +56,7 @@ export class MessagesService {
     try {
       const newMessage: Message = this.messageRepository.create({
         ...createQueryMessageDto,
+        category: { id: createQueryMessageDto.category },
         type: { id: 3 },
         user,
       });
@@ -67,7 +76,9 @@ export class MessagesService {
         .where({ user })
         .skip(offset)
         .take(limit)
-        .andWhere({ type: Not(3) });
+        .andWhere({ type: Not(3) })
+        .leftJoinAndSelect('messages.category', 'category')
+        .leftJoinAndSelect('messages.type', 'type');
 
       const allmessages = await query.getMany();
       // const allmessages = await this.messageRepository.find({
@@ -88,7 +99,9 @@ export class MessagesService {
         .where({ user })
         .skip(offset)
         .take(limit)
-        .andWhere({ type: 3 });
+        .andWhere({ type: 3 })
+        .leftJoinAndSelect('messages.category', 'category')
+        .leftJoinAndSelect('messages.type', 'type');
 
       const allqueries = await query.getMany();
       return { message: `This action returns all queries`, data: allqueries };
@@ -108,11 +121,13 @@ export class MessagesService {
   }
 
   async update(id: string, updateMessageDto: UpdateMessageDto) {
-    const type = { id: updateMessageDto.type };
+    const type = { id: updateMessageDto.type || 1 };
+    const category = { id: updateMessageDto.category || 1 };
     const msg = await this.messageRepository.preload({
       id,
       ...updateMessageDto,
       type,
+      category,
     });
     if (!msg) throw new NotFoundException(`Message whit #${id} not found`);
     try {
@@ -127,6 +142,13 @@ export class MessagesService {
     const message = await this.messageRepository.delete(id);
     if (!message.affected)
       throw new NotFoundException(`not found task whit id: ${id}`);
+  }
+
+  async getTypes() {
+    return this.typeMessageRepository.find();
+  }
+  async getCategories() {
+    return this.categoryRepository.find();
   }
 
   // #region methods
