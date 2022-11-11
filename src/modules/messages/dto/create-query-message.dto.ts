@@ -9,13 +9,13 @@ export class CreateQueryMessageDto {
   @MinLength(2)
   query: string;
 
-  @IsString()
-  @MinLength(2)
-  @IsOptional()
-  category: number;
+  // @IsString()
+  // @MinLength(2)
+  // @IsOptional()
+  // category: number;
 
-  @IsNumber()
-  @IsOptional()
-  type: number;
+  // @IsNumber()
+  // @IsOptional()
+  // type: number;
 
 }

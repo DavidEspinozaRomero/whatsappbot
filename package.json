@@ -44,7 +44,7 @@
     "rxjs": "^7.2.0",
     "socket.io": "^4.5.2",
     "typeorm": "^0.3.7",
-    "whatsapp-web.js": "github:ReforwardDev/whatsapp-web.js#patch-1"
+    "whatsapp-web.js": "^1.18.2"
   },
   "devDependencies": {
     "@nestjs/cli": "^9.0.0",

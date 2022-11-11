@@ -36,12 +36,12 @@ export class MessagesService {
 
   async create(createMessageDto: CreateMessageDto, user: User) {
     try {
-      const type = { id: createMessageDto.type };
-      const category = { id: createMessageDto.category };
+      // const type = { id: createMessageDto.type };
+      // const category = { id: createMessageDto.category };
       const newMessage: Message = this.messageRepository.create({
         ...createMessageDto,
-        type,
-        category,
+        // type,
+        // category,
         user,
       });
       await this.messageRepository.save(newMessage);
@@ -56,8 +56,8 @@ export class MessagesService {
     try {
       const newMessage: Message = this.messageRepository.create({
         ...createQueryMessageDto,
-        category: { id: createQueryMessageDto.category },
-        type: { id: 3 },
+        // category: { id: createQueryMessageDto.category },
+        // type: { id: 3 },
         user,
       });
       await this.messageRepository.save(newMessage);
@@ -100,10 +100,15 @@ export class MessagesService {
         .skip(offset)
         .take(limit)
         .andWhere({ type: 3 })
-        .leftJoinAndSelect('messages.category', 'category')
-        .leftJoinAndSelect('messages.type', 'type');
+        .leftJoinAndSelect('messages.category', 'category');
 
-      const allqueries = await query.getMany();
+      const allqueries = (await query.getMany()).map((message) => {
+        const { id, ...questionAnswer } = message;
+
+        return { ...questionAnswer};
+      });
+      console.log(allqueries);
+
       return { message: `This action returns all queries`, data: allqueries };
     } catch (err) {
       console.log(err);
@@ -121,13 +126,13 @@ export class MessagesService {
   }
 
   async update(id: string, updateMessageDto: UpdateMessageDto) {
-    const type = { id: updateMessageDto.type || 1 };
-    const category = { id: updateMessageDto.category || 1 };
+    // const type = { id: updateMessageDto.type || 1 };
+    // const category = { id: updateMessageDto.category || 1 };
     const msg = await this.messageRepository.preload({
       id,
       ...updateMessageDto,
-      type,
-      category,
+      // type,
+      // category,
     });
     if (!msg) throw new NotFoundException(`Message whit #${id} not found`);
     try {

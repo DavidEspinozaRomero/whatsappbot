@@ -7,16 +7,14 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 
-// import { JwtService } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
 
 import { BotwsService } from './botws.service';
-// import { JwtPayload } from '../auth/strategies/jwt.strategy';
+import { JwtPayload } from '../auth/strategies/jwt.strategy';
 import { MessagesService } from '../messages/messages.service';
 import { Auth, GetUser } from '../auth/decorators';
 import { User } from '../auth/entities/user.entity';
-import { JwtPayload } from '../auth/strategies/jwt.strategy';
-import { JwtService } from '@nestjs/jwt';
 
 @WebSocketGateway({ cors: true, namespace: '/' })
 export class BotwsGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -33,6 +31,8 @@ export class BotwsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       payload = this.jwtService.verify(token);
       await this.botwsService.registerClient(client, payload.id);
     } catch (error) {
+      console.log(error);
+      
       client.disconnect();
       return;
     }

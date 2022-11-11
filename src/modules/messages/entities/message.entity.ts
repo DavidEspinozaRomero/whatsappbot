@@ -29,21 +29,21 @@ export class Message {
   // })
   // category: string;
 
-  @Column('text', {
-    default: null,
-  })
-  date: string;
+  // @Column('text', {
+  //   default: null,
+  // })
+  // date: string;
   //#endregion Columns
 
   //#region Relations
   @ManyToOne(() => User, (user) => user.message)
   user: User;
 
-  @ManyToOne(() => TypeMessage, type => type.description)
-  type: TypeMessage;
+  // @ManyToOne(() => TypeMessage, type => type.description)
+  // type: TypeMessage;
   
-  @ManyToOne(() => Category, category => category.description)
-  category: Category;
+  // @ManyToOne(() => Category, category => category.description)
+  // category: Category;
   // contactos
   //#endregion Relations
 

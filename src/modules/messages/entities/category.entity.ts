@@ -12,8 +12,8 @@ export class Category {
   //#endregion Columns
 
   //#region Relations
-  @OneToMany(() => Message, (message) => message.type)
-  message: Message;
+  // @OneToMany(() => Message, (message) => message.type)
+  // message: Message;
   //#endregion Relations
 
   //#region Methods
