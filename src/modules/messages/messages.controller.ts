@@ -13,7 +13,6 @@ import { UpdateMessageDto } from './dto/update-message.dto';
 import { Auth, GetUser } from '../auth/decorators';
 import { User } from '../auth/entities/user.entity';
 import { PaginationDTO } from '../common/dto/pagination.dto';
-import { CreateQueryMessageDto } from './dto/create-query-message.dto';
 import { ValidRoles } from '../auth/interfaces/valid-roles';
 
 @Controller('messages')
@@ -47,11 +46,12 @@ export class MessagesController {
   //   return this.messagesService.findQueriesAll(query, user);
   // }
 
-  @Get('/get-types')
-  @Auth(ValidRoles.user)
-  getAllTypes() {
-    return this.messagesService.getTypes();
-  }
+  // @Get('/get-types')
+  // @Auth(ValidRoles.user)
+  // getAllTypes() {
+  //   return this.messagesService.getTypes();
+  // }
+
   @Get('/get-categories')
   @Auth(ValidRoles.user)
   getAllCategories() {

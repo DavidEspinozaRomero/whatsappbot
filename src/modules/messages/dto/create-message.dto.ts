@@ -1,20 +1,33 @@
-import { IsBoolean, IsDate, IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  Max,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class CreateMessageDto {
-  @IsString()
-  @MinLength(2)
-  message: string;
 
   @IsString()
   @MinLength(2)
-  @IsOptional()
-  category: number;
+  query: string;
+
+  @IsString()
+  @MinLength(2)
+  answer: string;
+
+  @IsString()
+  @MinLength(2)
+  startTime: string;
+
+  @IsString()
+  @MinLength(2)
+  endTime: string;
 
   @IsNumber()
+  @Min(1)
+  @Max(5)
   @IsOptional()
-  type: number;
-
-  @IsOptional()
-  @IsString()
-  date: string;
+  category: number;
 }

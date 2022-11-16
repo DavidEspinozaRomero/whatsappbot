@@ -12,11 +12,7 @@ import { PaginationDTO } from '../common/dto/pagination.dto';
 
 import { User } from '../auth/entities/user.entity';
 import { Message } from './entities/message.entity';
-import {
-  CreateMessageDto,
-  UpdateMessageDto,
-  CreateQueryMessageDto,
-} from './dto';
+import { CreateMessageDto, UpdateMessageDto } from './dto';
 import { TypeMessage } from './entities/typeMessage.entity';
 import { Category } from './entities/category.entity';
 
@@ -50,21 +46,6 @@ export class MessagesService {
     }
   }
 
-  // async createQuery(createQueryMessageDto: CreateQueryMessageDto, user: User) {
-  //   try {
-  //     const newMessage: Message = this.messageRepository.create({
-  //       ...createQueryMessageDto,
-  //       category: { id: createQueryMessageDto.category },
-  //       user,
-  //     });
-  //     await this.messageRepository.save(newMessage);
-  //     delete newMessage.user;
-  //     return { message: 'mensaje agregado', ...newMessage };
-  //   } catch (err) {
-  //     this.handleExceptions(err);
-  //   }
-  // }
-
   async findAll(query: PaginationDTO, user: User) {
     const { limit = 10, offset = 0 } = query;
     try {
@@ -73,39 +54,19 @@ export class MessagesService {
         .where({ user })
         .skip(offset)
         .take(limit)
-        .andWhere({ type: Not(3) })
-        .leftJoinAndSelect('messages.category', 'category')
-        .leftJoinAndSelect('messages.type', 'type');
+        .leftJoinAndSelect('messages.category', 'category');
 
       const allmessages = await query.getMany();
-      // const allmessages = await this.messageRepository.find({
-      //   skip: offset,
-      //   take: limit,
-      // });
-      return { message: `This action returns all messages`, data: allmessages };
+      const data = allmessages.map((message) => {
+        const { category, ...dataMessage } = message;
+
+        return { ...dataMessage, category: category.description };
+      });
+      return { message: `This action returns all messages`, data };
     } catch (err) {
       console.log(err);
     }
   }
-
-  // async findQueriesAll(query: PaginationDTO, user: User) {
-  //   const { limit = 10, offset = 0 } = query;
-  //   try {
-  //     const query = this.messageRepository.createQueryBuilder('messages');
-  //     query
-  //       .where({ user })
-  //       .skip(offset)
-  //       .take(limit)
-  //       .andWhere({ type: 3 })
-  //       .leftJoinAndSelect('messages.category', 'category')
-  //       .leftJoinAndSelect('messages.type', 'type');
-
-  //     const allqueries = await query.getMany();
-  //     return { message: `This action returns all queries`, data: allqueries };
-  //   } catch (err) {
-  //     console.log(err);
-  //   }
-  // }
 
   async findOne(id: string, user: User) {
     const message = await this.messageRepository.findOne({
@@ -139,9 +100,6 @@ export class MessagesService {
       throw new NotFoundException(`not found task whit id: ${id}`);
   }
 
-  async getTypes() {
-    return this.typeMessageRepository.find();
-  }
   async getCategories() {
     return this.categoryRepository.find();
   }
@@ -157,3 +115,40 @@ export class MessagesService {
   }
   // #endregion methods
 }
+
+// async createQuery(createQueryMessageDto: CreateQueryMessageDto, user: User) {
+//   try {
+//     const newMessage: Message = this.messageRepository.create({
+//       ...createQueryMessageDto,
+//       category: { id: createQueryMessageDto.category },
+//       user,
+//     });
+//     await this.messageRepository.save(newMessage);
+//     delete newMessage.user;
+//     return { message: 'mensaje agregado', ...newMessage };
+//   } catch (err) {
+//     this.handleExceptions(err);
+//   }
+// }
+
+// async findQueriesAll(query: PaginationDTO, user: User) {
+//   const { limit = 10, offset = 0 } = query;
+//   try {
+//     const query = this.messageRepository.createQueryBuilder('messages');
+//     query
+//       .where({ user })
+//       .skip(offset)
+//       .take(limit)
+//       .andWhere({ type: 3 })
+//       .leftJoinAndSelect('messages.category', 'category')
+//       .leftJoinAndSelect('messages.type', 'type');
+
+//     const allqueries = await query.getMany();
+//     return { message: `This action returns all queries`, data: allqueries };
+//   } catch (err) {
+//     console.log(err);
+//   }
+// }
+// async getTypes() {
+//   return this.typeMessageRepository.find();
+// }
