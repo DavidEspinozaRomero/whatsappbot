@@ -1,46 +1,37 @@
 import {
   Column,
   Entity,
-  JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 import { Category } from './category.entity';
-import { TypeMessage } from './typeMessage.entity';
 
 @Entity('messages')
 export class Message {
   //#region Columns
-  @PrimaryGeneratedColumn('uuid')
+  @PrimaryGeneratedColumn('increment')
   id: string;
 
-  @Column('text', {
-    default: null,
-  })
+  @Column('text')
   query: string;
 
   @Column('text')
-  message: string;
+  answer: string;
 
-  // @Column('text', {
-  //   default: 'default',
-  // })
-  // category: string;
-
-  @Column('text', {
-    default: null,
-  })
-  date: string;
+  @Column('text')
+  startTime: string;
+  
+  @Column('text')
+  endTime: string;
   //#endregion Columns
 
   //#region Relations
   @ManyToOne(() => User, (user) => user.message)
   user: User;
 
-  @ManyToOne(() => TypeMessage, type => type.description)
-  type: TypeMessage;
+  // @ManyToOne(() => TypeMessage, type => type.description)
+  // type: TypeMessage;
   
   @ManyToOne(() => Category, category => category.description)
   category: Category;

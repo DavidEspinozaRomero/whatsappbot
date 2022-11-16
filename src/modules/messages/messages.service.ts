@@ -36,11 +36,9 @@ export class MessagesService {
 
   async create(createMessageDto: CreateMessageDto, user: User) {
     try {
-      const type = { id: createMessageDto.type };
       const category = { id: createMessageDto.category };
       const newMessage: Message = this.messageRepository.create({
         ...createMessageDto,
-        type,
         category,
         user,
       });
@@ -52,21 +50,20 @@ export class MessagesService {
     }
   }
 
-  async createQuery(createQueryMessageDto: CreateQueryMessageDto, user: User) {
-    try {
-      const newMessage: Message = this.messageRepository.create({
-        ...createQueryMessageDto,
-        category: { id: createQueryMessageDto.category },
-        type: { id: 3 },
-        user,
-      });
-      await this.messageRepository.save(newMessage);
-      delete newMessage.user;
-      return { message: 'mensaje agregado', ...newMessage };
-    } catch (err) {
-      this.handleExceptions(err);
-    }
-  }
+  // async createQuery(createQueryMessageDto: CreateQueryMessageDto, user: User) {
+  //   try {
+  //     const newMessage: Message = this.messageRepository.create({
+  //       ...createQueryMessageDto,
+  //       category: { id: createQueryMessageDto.category },
+  //       user,
+  //     });
+  //     await this.messageRepository.save(newMessage);
+  //     delete newMessage.user;
+  //     return { message: 'mensaje agregado', ...newMessage };
+  //   } catch (err) {
+  //     this.handleExceptions(err);
+  //   }
+  // }
 
   async findAll(query: PaginationDTO, user: User) {
     const { limit = 10, offset = 0 } = query;
@@ -91,24 +88,24 @@ export class MessagesService {
     }
   }
 
-  async findQueriesAll(query: PaginationDTO, user: User) {
-    const { limit = 10, offset = 0 } = query;
-    try {
-      const query = this.messageRepository.createQueryBuilder('messages');
-      query
-        .where({ user })
-        .skip(offset)
-        .take(limit)
-        .andWhere({ type: 3 })
-        .leftJoinAndSelect('messages.category', 'category')
-        .leftJoinAndSelect('messages.type', 'type');
+  // async findQueriesAll(query: PaginationDTO, user: User) {
+  //   const { limit = 10, offset = 0 } = query;
+  //   try {
+  //     const query = this.messageRepository.createQueryBuilder('messages');
+  //     query
+  //       .where({ user })
+  //       .skip(offset)
+  //       .take(limit)
+  //       .andWhere({ type: 3 })
+  //       .leftJoinAndSelect('messages.category', 'category')
+  //       .leftJoinAndSelect('messages.type', 'type');
 
-      const allqueries = await query.getMany();
-      return { message: `This action returns all queries`, data: allqueries };
-    } catch (err) {
-      console.log(err);
-    }
-  }
+  //     const allqueries = await query.getMany();
+  //     return { message: `This action returns all queries`, data: allqueries };
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // }
 
   async findOne(id: string, user: User) {
     const message = await this.messageRepository.findOne({
@@ -121,12 +118,10 @@ export class MessagesService {
   }
 
   async update(id: string, updateMessageDto: UpdateMessageDto) {
-    const type = { id: updateMessageDto.type || 1 };
     const category = { id: updateMessageDto.category || 1 };
     const msg = await this.messageRepository.preload({
       id,
       ...updateMessageDto,
-      type,
       category,
     });
     if (!msg) throw new NotFoundException(`Message whit #${id} not found`);

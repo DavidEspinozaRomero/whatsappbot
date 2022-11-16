@@ -1,17 +1,17 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Message } from './message.entity';
 
-@Entity('type_messages')
-export class TypeMessage {
+@Entity('historical')
+export class Historical {
   //#region Columns
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column('text')
-  description: string;
-  //#endregion Columns
+  // @Column('text')
+  // description: string;
+  // //#endregion Columns
 
-  //#region Relations
+  // //#region Relations
   // @OneToMany(() => Message, (message) => message.type)
   // message: Message;
 

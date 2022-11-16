@@ -26,14 +26,14 @@ export class MessagesController {
     return this.messagesService.create(createMessageDto, user);
   }
 
-  @Post('/query')
-  @Auth()
-  createQuery(
-    @Body() createQueryMessageDto: CreateQueryMessageDto,
-    @GetUser() user: User
-  ) {
-    return this.messagesService.createQuery(createQueryMessageDto, user);
-  }
+  // @Post('/query')
+  // @Auth()
+  // createQuery(
+  //   @Body() createQueryMessageDto: CreateQueryMessageDto,
+  //   @GetUser() user: User
+  // ) {
+  //   return this.messagesService.createQuery(createQueryMessageDto, user);
+  // }
 
   @Get()
   @Auth()
@@ -41,11 +41,11 @@ export class MessagesController {
     return this.messagesService.findAll(query, user);
   }
 
-  @Get('/find-queries')
-  @Auth()
-  findQueriesAll(@Param() query: PaginationDTO, @GetUser() user: User) {
-    return this.messagesService.findQueriesAll(query, user);
-  }
+  // @Get('/find-queries')
+  // @Auth()
+  // findQueriesAll(@Param() query: PaginationDTO, @GetUser() user: User) {
+  //   return this.messagesService.findQueriesAll(query, user);
+  // }
 
   @Get('/get-types')
   @Auth(ValidRoles.user)

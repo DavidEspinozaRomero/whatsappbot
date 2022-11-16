@@ -7,9 +7,11 @@ import WAWebJS, { Client, LocalAuth, MessageMedia } from 'whatsapp-web.js';
 import * as qrcode from 'qrcode-terminal';
 import * as fs from 'fs';
 import * as qr from 'qr-image';
-import { join } from 'path';
 
 import { User } from '../auth/entities/user.entity';
+import { MessagesService } from '../messages/messages.service';
+import { PaginationDTO } from '../common/dto/pagination.dto';
+
 @Injectable()
 export class BotwsService {
   //#region
@@ -21,12 +23,13 @@ export class BotwsService {
 
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>
+    private readonly userRepository: Repository<User>,
+    private readonly messagesService: MessagesService
   ) {}
 
   //#region methods
 
-  connectWhitWAW(sio: Socket, user: User) {
+  async connectWhitWAW(sio: Socket, user: User) {
     this.client = new Client({
       authStrategy: new LocalAuth({
         dataPath: './sessions/',
@@ -36,7 +39,7 @@ export class BotwsService {
     });
 
     this.clientAuthenticated(this.client);
-    this.clientReady(this.client, sio);
+    this.clientReady(this.client, sio, user);
     this.clientQr(this.client, sio, user.id);
     this.clientDisconect();
 
@@ -49,7 +52,7 @@ export class BotwsService {
     });
   }
 
-  private listenMessages(client: Client): void {
+  private listenMessages(client: Client, user: User): void {
     console.log('Listen!');
     client.on('message', async (msg) => {
       // const contact: WAWebJS.Contact = await msg.getContact();
@@ -71,13 +74,13 @@ export class BotwsService {
       //   // const media = await msg.downloadMedia();
       //   // do something with the media data here
       // }
-      this.buildMessage(client, msg);
+      this.buildMessage(client, msg, user);
     });
   }
 
-  private clientReady(client: Client, sio: Socket): void {
+  private clientReady(client: Client, sio: Socket, user: User): void {
     client.on('ready', () => {
-      this.listenMessages(client);
+      this.listenMessages(client, user);
       const payload = {
         action: 'ready',
         description: 'Client is ready!',
@@ -98,7 +101,7 @@ export class BotwsService {
           this.deleteFile('qr', `${userId}.svg`);
         }, 1000);
       });
-      // qrcode.generate(qr, { small: true }); // qr terminal
+      qrcode.generate(qr, { small: true }); // qr terminal
     });
   }
 
@@ -111,60 +114,67 @@ export class BotwsService {
   private deleteFile(dir: string, pathFile: string) {
     const filePath = `${dir}/${pathFile}`;
     fs.unlinkSync(filePath);
-    console.log('removed', pathFile);
   }
 
-  // getDBQuestionAnswer() {
-
+  // getDBQuestionAnswer(user: User) {
+  //   const query: PaginationDTO = { limit: 10, offset: 0 };
+  //   return this.messagesService.findQueriesAll(query, user);
   // }
 
   // TODO: agregar metodo para almacenar media
   // private storageMedia() {}
 
   // TODO: agregar metodo para diferenciar cuando enviar mensajes
-  private async buildMessage(client: Client, msg: WAWebJS.Message) {
+  private async buildMessage(client: Client, msg: WAWebJS.Message, user: User) {
     const { from, to, body, reply, hasMedia } = msg;
-    console.log(body);
+
+    // const { data } = await this.getDBQuestionAnswer(user);
+    // const { data } = await this.getDBQuestionAnswer(user);
+
+    // TODO: agregar un tipo al mensage (texto/imagen/audio/url)
+    // data.find(({ query, message }) => {
+    //   console.log(body, query, message);
+      
+    //   if (body.toLowerCase() == query.toLowerCase()) {
+    //     console.log('match');
+        
+    //     this.sendMessage(client, from, message);
+    //   }
+    // });
 
     // TODO: llamar a la api para responder segun el texto
-    if (body.includes('link')) {
-      this.sendMessage(client, from, 'https://youtu.be/6CwIB6pQoPo');
-      return;
-    }
-    if (body.includes('saludo')) {
-      // texto
-      // agregar un metodo para responder segun el texto
-      const contact: WAWebJS.Contact = await msg.getContact();
-      this.sendMessage(client, from, `Hello ${contact.shortName}`);
-      return;
-    }
-    if (body.includes('imagen')) {
-      // img
-      const DBresponse = 'img1.png';
-      const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
-      this.sendMessage(client, from, media);
-      return;
-    }
-    if (body.includes('audio')) {
-      // audio
-      const DBresponse = 'audio1.mp3';
-      const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
-      this.sendMessage(client, from, media);
-      return;
-    }
-    if (body.includes('url')) {
-      // url
-      const DBresponse = 'https://randomuser.me/api/portraits/women/0.jpg';
-      const media = await MessageMedia.fromUrl(DBresponse);
-      this.sendMessage(client, from, media);
-      return;
-    }
-
-    this.sendMessage(
-      client,
-      from,
-      'Escribe saludo/imagen/audio/url para el mensaje deseado'
-    );
+    // if (body.toLowerCase().includes('link')) {
+    //   this.sendMessage(client, from, 'https://youtu.be/6CwIB6pQoPo');
+    //   return;
+    // }
+    // if (body.toLowerCase().includes('saludo')) {
+    //   // texto
+    //   // agregar un metodo para responder segun el texto
+    //   const contact: WAWebJS.Contact = await msg.getContact();
+    //   this.sendMessage(client, from, `Hello ${contact.shortName}`);
+    //   return;
+    // }
+    // if (body.toLowerCase().includes('imagen')) {
+    //   // img
+    //   const DBresponse = 'img1.png';
+    //   const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
+    //   this.sendMessage(client, from, media);
+    //   return;
+    // }
+    // if (body.toLowerCase().includes('audio')) {
+    //   // audio
+    //   const DBresponse = 'audio1.mp3';
+    //   const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
+    //   this.sendMessage(client, from, media);
+    //   return;
+    // }
+    // if (body.toLowerCase().includes('url')) {
+    //   // url
+    //   const DBresponse = 'https://randomuser.me/api/portraits/women/0.jpg';
+    //   const media = await MessageMedia.fromUrl(DBresponse);
+    //   this.sendMessage(client, from, media);
+    //   return;
+    // }
   }
 
   // TODO: agregar metodo de reply
