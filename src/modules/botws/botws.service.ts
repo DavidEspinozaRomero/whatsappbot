@@ -11,6 +11,7 @@ import * as qr from 'qr-image';
 import { User } from '../auth/entities/user.entity';
 import { MessagesService } from '../messages/messages.service';
 import { PaginationDTO } from '../common/dto/pagination.dto';
+import { Message } from '../messages/entities/message.entity';
 
 @Injectable()
 export class BotwsService {
@@ -116,10 +117,10 @@ export class BotwsService {
     fs.unlinkSync(filePath);
   }
 
-  // getDBQuestionAnswer(user: User) {
-  //   const query: PaginationDTO = { limit: 10, offset: 0 };
-  //   return this.messagesService.findQueriesAll(query, user);
-  // }
+  getDBQuestionAnswer(user: User) {
+    const query: PaginationDTO = { limit: 10, offset: 0 };
+    return this.messagesService.findAll(query, user);
+  }
 
   // TODO: agregar metodo para almacenar media
   // private storageMedia() {}
@@ -128,19 +129,31 @@ export class BotwsService {
   private async buildMessage(client: Client, msg: WAWebJS.Message, user: User) {
     const { from, to, body, reply, hasMedia } = msg;
 
-    // const { data } = await this.getDBQuestionAnswer(user);
-    // const { data } = await this.getDBQuestionAnswer(user);
+    const { data } = await this.getDBQuestionAnswer(user);
 
+    const now: string = new Date().toTimeString().split(' ')[0];
+
+    const filterbytext = data.filter(
+      ({ query }) => body.toLowerCase().includes(query.toLowerCase())
+    );
+
+    const filterbytime = filterbytext.filter(
+      ({ startTime, endTime }) => startTime <= now && now <= endTime
+    );
     // TODO: agregar un tipo al mensage (texto/imagen/audio/url)
-    // data.find(({ query, message }) => {
-    //   console.log(body, query, message);
-      
-    //   if (body.toLowerCase() == query.toLowerCase()) {
-    //     console.log('match');
-        
-    //     this.sendMessage(client, from, message);
-    //   }
-    // });
+    // ({ query, answer, startTime, endTime })
+    const find = filterbytime.find(
+      ({ query }) => body.toLowerCase() == query.toLowerCase()
+    );
+
+    if (!find) {
+      return;
+    }
+    const { answer } = find;
+
+    setTimeout(() => {
+      this.sendMessage(client, from, answer);
+    }, 1000);
 
     // TODO: llamar a la api para responder segun el texto
     // if (body.toLowerCase().includes('link')) {
