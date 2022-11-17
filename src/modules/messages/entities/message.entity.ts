@@ -11,7 +11,7 @@ import { Category } from './category.entity';
 export class Message {
   //#region Columns
   @PrimaryGeneratedColumn('increment')
-  id: string;
+  id: number;
 
   @Column('text')
   query: string;

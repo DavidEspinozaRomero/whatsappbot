@@ -61,12 +61,12 @@ export class MessagesController {
   @Get(':id')
   @Auth()
   findOne(@Param('id') id: string, @GetUser() user: User) {
-    return this.messagesService.findOne(id, user);
+    return this.messagesService.findOne(+id, user);
   }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateMessageDto: UpdateMessageDto) {
-    return this.messagesService.update(id, updateMessageDto);
+    return this.messagesService.update(+id, updateMessageDto);
   }
 
   @Delete(':id')

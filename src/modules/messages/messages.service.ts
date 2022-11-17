@@ -68,7 +68,7 @@ export class MessagesService {
     }
   }
 
-  async findOne(id: string, user: User) {
+  async findOne(id: number, user: User) {
     const message = await this.messageRepository.findOne({
       where: { id },
     });
@@ -78,8 +78,8 @@ export class MessagesService {
     return { message: `This action returns a #${id} message`, data: message };
   }
 
-  async update(id: string, updateMessageDto: UpdateMessageDto) {
-    const category = { id: updateMessageDto.category || 1 };
+  async update(id: number, updateMessageDto: UpdateMessageDto) {
+    const category = { id: updateMessageDto.category || 0 };
     const msg = await this.messageRepository.preload({
       id,
       ...updateMessageDto,
