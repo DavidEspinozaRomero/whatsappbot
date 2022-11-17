@@ -29,6 +29,34 @@ yarn start:dev
 
 http://localhost:3000/api/seed
 
+
+## Deploy app
+
+### Heroku
+
+1. login
+
+```
+heroku login
+```
+
+2. Add to remote heroku if not exist. If exist go to 4.
+
+```
+heroku git:remote -a wwmessagesmanager
+```
+
+3. Deploy your application
+
+```
+git push heroku <branch>
+```
+
+4. For existing repositories, simply add the heroku remote
+
+```
+heroku git:remote -a wwmessagesmanager
+```
 <!-- ## Running the app
 
 ```bash
