@@ -90,7 +90,7 @@ export class MessagesService {
       await this.messageRepository.save(msg);
       return { message: `This action updates a #${id} message`, data: msg };
     } catch (err) {
-      console.log(err);
+      this.handleExceptions(err);
     }
   }
 
@@ -105,6 +105,7 @@ export class MessagesService {
   }
 
   // #region methods
+  //TODO: crear un handleExceptions global (serviceName:string, err:any)
   private handleExceptions(err: any): never {
     if (err.code === '23505') throw new BadRequestException(err.detail);
 
@@ -113,6 +114,7 @@ export class MessagesService {
       'Unexpected error, check server logs'
     );
   }
+
   // #endregion methods
 }
 

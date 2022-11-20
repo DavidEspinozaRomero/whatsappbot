@@ -137,9 +137,11 @@ export class BotwsService {
       ({ query }) => body.toLowerCase().includes(query.toLowerCase())
     );
 
+    // TODO: mejorar el filtro por tiempo st 19:00 et 18:00 (solo 1 hora no se enviaria este mensaje de 18 a 19)
     const filterbytime = filterbytext.filter(
       ({ startTime, endTime }) => startTime <= now && now <= endTime
     );
+    // TODO: agregar un filtro por categoria y tipo
     // TODO: agregar un tipo al mensage (texto/imagen/audio/url)
     // ({ query, answer, startTime, endTime })
     const find = filterbytime.find(
@@ -190,6 +192,10 @@ export class BotwsService {
     // }
   }
 
+  filterByString(arr: []): [] {
+
+    return []
+  }
   // TODO: agregar metodo de reply
 
   private sendMessage(
