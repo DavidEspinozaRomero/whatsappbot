@@ -12,6 +12,7 @@ import { User } from '../auth/entities/user.entity';
 import { MessagesService } from '../messages/messages.service';
 import { PaginationDTO } from '../common/dto/pagination.dto';
 import { Message } from '../messages/entities/message.entity';
+import { QuestionAnwer } from './interfaces/questionAnswers.interface';
 
 @Injectable()
 export class BotwsService {
@@ -31,20 +32,23 @@ export class BotwsService {
   //#region methods
 
   async connectWhitWAW(sio: Socket, user: User) {
-    this.client = new Client({
-      authStrategy: new LocalAuth({
-        dataPath: './sessions/',
-        clientId: user.id,
-      }),
-      puppeteer: { headless: true },
-    });
+    if (!this.conectedClients[sio.id].client) {
+      this.conectedClients[sio.id].client = new Client({
+        authStrategy: new LocalAuth({
+          dataPath: './sessions/',
+          clientId: user.id,
+        }),
+        puppeteer: { headless: true },
+      });
+    }
 
-    this.clientAuthenticated(this.client);
-    this.clientReady(this.client, sio, user);
-    this.clientQr(this.client, sio, user.id);
-    this.clientDisconect();
+    const { client } = this.conectedClients[sio.id];
+    this.clientAuthenticated(client);
+    this.clientReady(client, sio, user);
+    this.clientQr(client, sio, user.id);
+    this.clientDisconect(client);
 
-    this.client.initialize();
+    client.initialize();
   }
 
   private clientAuthenticated(client: Client) {
@@ -91,7 +95,7 @@ export class BotwsService {
   }
 
   private clientQr(client: Client, sio: Socket, userId: string | number): void {
-    this.client.on('qr', (qr) => {
+    client.on('qr', (qr) => {
       this.generateImage(qr, userId, () => {
         const payload = {
           action: 'download',
@@ -106,8 +110,9 @@ export class BotwsService {
     });
   }
 
-  private clientDisconect(): void {
-    this.client.on('disconnected', () => {
+  private clientDisconect(client: Client): void {
+    client.on('disconnected', () => {
+      client.destroy();
       console.log('Client is disconnected!');
     });
   }
@@ -129,22 +134,16 @@ export class BotwsService {
   private async buildMessage(client: Client, msg: WAWebJS.Message, user: User) {
     const { from, to, body, reply, hasMedia } = msg;
 
-    const { data } = await this.getDBQuestionAnswer(user);
+    let { data } = await this.getDBQuestionAnswer(user);
 
     const now: string = new Date().toTimeString().split(' ')[0];
+    data = this.filterByString(data, body);
+    data = this.filterByTime(data, now);
+    // data = this.filterByType(data);
+    // data = this.filterByCategory(data);
 
-    const filterbytext = data.filter(
-      ({ query }) => body.toLowerCase().includes(query.toLowerCase())
-    );
-
-    // TODO: mejorar el filtro por tiempo st 19:00 et 18:00 (solo 1 hora no se enviaria este mensaje de 18 a 19)
-    const filterbytime = filterbytext.filter(
-      ({ startTime, endTime }) => startTime <= now && now <= endTime
-    );
-    // TODO: agregar un filtro por categoria y tipo
     // TODO: agregar un tipo al mensage (texto/imagen/audio/url)
-    // ({ query, answer, startTime, endTime })
-    const find = filterbytime.find(
+    const find = data.find(
       ({ query }) => body.toLowerCase() == query.toLowerCase()
     );
 
@@ -192,9 +191,23 @@ export class BotwsService {
     // }
   }
 
-  filterByString(arr: []): [] {
+  filterByString(arr: QuestionAnwer[], message: string): QuestionAnwer[] {
+    return arr.filter(({ query }) =>
+      message.toLowerCase().includes(query.toLowerCase())
+    );
+  }
 
-    return []
+  // TODO: mejorar el filtro por tiempo st 19:00 et 18:00 (solo 1 hora no se enviaria este mensaje de 18 a 19)
+  filterByTime(arr: QuestionAnwer[], now: string): QuestionAnwer[] {
+    return arr.filter(
+      ({ startTime, endTime }) => startTime <= now && now <= endTime
+    );
+  }
+  filterByType(arr: QuestionAnwer[]): QuestionAnwer[] {
+    return [];
+  }
+  filterByCategory(arr: QuestionAnwer[]): QuestionAnwer[] {
+    return [];
   }
   // TODO: agregar metodo de reply
 
@@ -218,18 +231,19 @@ export class BotwsService {
 
   //#endregion methods
 
-  async registerClient(client: Socket, userId: string) {
+  async registerClient(clientSocket: Socket, userId: string) {
     const user = await this.userRepository.findOneBy({ id: userId });
 
     if (!user) throw new Error('user not found');
     if (!user.isActive) throw new Error('user not active');
     this.checkUserConnection(user);
-    this.conectedClients[client.id] = { socket: client, user };
-    this.connectWhitWAW(client, user);
+    this.conectedClients[clientSocket.id] = { socket: clientSocket, user };
+    this.connectWhitWAW(clientSocket, user);
   }
 
-  removeClient(clientId: string) {
-    delete this.conectedClients[clientId];
+  removeClient(client: Socket) {
+    this.conectedClients[client.id].client.destroy();
+    delete this.conectedClients[client.id];
   }
 
   getClientsConected(): string[] {
@@ -257,6 +271,7 @@ interface ConectedClients {
   [id: string]: {
     socket: Socket;
     user: User;
+    client?: Client;
     // mobile?: boolean;
     // descktop?: boolean;
   };

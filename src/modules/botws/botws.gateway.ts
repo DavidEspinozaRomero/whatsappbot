@@ -12,9 +12,6 @@ import { Server, Socket } from 'socket.io';
 
 import { BotwsService } from './botws.service';
 import { JwtPayload } from '../auth/strategies/jwt.strategy';
-import { MessagesService } from '../messages/messages.service';
-import { Auth, GetUser } from '../auth/decorators';
-import { User } from '../auth/entities/user.entity';
 
 @WebSocketGateway({ cors: true, namespace: '/' })
 export class BotwsGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -32,15 +29,15 @@ export class BotwsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       await this.botwsService.registerClient(client, payload.id);
     } catch (error) {
       console.log(error);
-      
+
       client.disconnect();
       return;
     }
   }
 
   handleDisconnect(client: any) {
-    this.botwsService.removeClient(client.id);
-    console.log('disconected');
+    this.botwsService.removeClient(client);
+    console.log('Cliente desconectado:', client.id);
   }
 
   // async handleConnection(client: Socket, ...args: any[]) {
