@@ -11,7 +11,6 @@ import * as qr from 'qr-image';
 import { User } from '../auth/entities/user.entity';
 import { MessagesService } from '../messages/messages.service';
 import { PaginationDTO } from '../common/dto/pagination.dto';
-import { Message } from '../messages/entities/message.entity';
 import { QuestionAnwer } from './interfaces/questionAnswers.interface';
 
 @Injectable()
@@ -31,24 +30,23 @@ export class BotwsService {
 
   //#region methods
 
-  async connectWhitWAW(sio: Socket, user: User) {
-    if (!this.conectedClients[sio.id].client) {
-      this.conectedClients[sio.id].client = new Client({
+  async connectWhitWAW(user: User) {
+    if (!this.conectedClients[user.id]?.client) {
+      this.conectedClients[user.id].client = new Client({
         authStrategy: new LocalAuth({
           dataPath: './sessions/',
           clientId: user.id,
         }),
         puppeteer: { headless: true },
       });
+      const { client, socket } = this.conectedClients[user.id];
+      this.clientAuthenticated(client);
+      this.clientReady(client, socket, user);
+      this.clientQr(client, socket, user.id);
+      this.clientDisconect(client);
+
+      client.initialize();
     }
-
-    const { client } = this.conectedClients[sio.id];
-    this.clientAuthenticated(client);
-    this.clientReady(client, sio, user);
-    this.clientQr(client, sio, user.id);
-    this.clientDisconect(client);
-
-    client.initialize();
   }
 
   private clientAuthenticated(client: Client) {
@@ -237,13 +235,16 @@ export class BotwsService {
     if (!user) throw new Error('user not found');
     if (!user.isActive) throw new Error('user not active');
     this.checkUserConnection(user);
-    this.conectedClients[clientSocket.id] = { socket: clientSocket, user };
-    this.connectWhitWAW(clientSocket, user);
+    if (!this.conectedClients[user.id]) {
+      this.conectedClients[user.id] = { socket: clientSocket, user };
+    }
+    this.connectWhitWAW(user);
   }
 
   removeClient(client: Socket) {
-    this.conectedClients[client.id].client.destroy();
-    delete this.conectedClients[client.id];
+    // delete this.conectedClients[client.id];
+    // this.conectedClients[client.id]?.client?.destroy();
+    // delete this.conectedClients[client.id];
   }
 
   getClientsConected(): string[] {
