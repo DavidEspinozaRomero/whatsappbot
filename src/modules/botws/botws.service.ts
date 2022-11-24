@@ -30,23 +30,46 @@ export class BotwsService {
 
   //#region methods
 
-  async connectWhitWAW(user: User) {
-    if (!this.conectedClients[user.id]?.client) {
-      this.conectedClients[user.id].client = new Client({
-        authStrategy: new LocalAuth({
-          dataPath: './sessions/',
-          clientId: user.id,
-        }),
-        puppeteer: { headless: true },
-      });
-      const { client, socket } = this.conectedClients[user.id];
-      this.clientAuthenticated(client);
-      this.clientReady(client, socket, user);
-      this.clientQr(client, socket, user.id);
-      this.clientDisconect(client);
+  async connectWhitWAW(clientSocket: Socket, userId: string) {
+    const user = await this.userRepository.findOneBy({ id: userId });
 
-      client.initialize();
+    if (!user) throw new Error('user not found');
+    if (!user.isActive) throw new Error('user not active');
+    // this.checkUserConnection(user);
+
+    if (!this.conectedClients[user.id]?.client) {
+      this.#createClient(user);
+      return;
     }
+
+    const payload = {
+      action: 'ready',
+      description: 'Client is ready!',
+    };
+    clientSocket.emit('message-from-server', payload);
+  }
+
+  #createClient(user: User) {
+    this.conectedClients[user.id].client = new Client({
+      authStrategy: new LocalAuth({
+        dataPath: './sessions/',
+        clientId: user.id,
+      }),
+      puppeteer: { headless: true },
+    });
+    const { client, socket } = this.conectedClients[user.id];
+    const payload = {
+      action: 'creating',
+      description: 'Creating client and generating QR',
+    };
+    socket.emit('message-from-server', payload);
+
+    this.clientAuthenticated(client);
+    this.clientReady(client, socket, user);
+    this.clientQr(client, socket, user.id);
+    this.clientDisconect(client);
+
+    client.initialize();
   }
 
   private clientAuthenticated(client: Client) {
@@ -102,7 +125,7 @@ export class BotwsService {
         sio.emit('message-from-server', payload);
         setTimeout(() => {
           this.deleteFile('qr', `${userId}.svg`);
-        }, 1000);
+        }, 1000 * 10);
       });
       qrcode.generate(qr, { small: true }); // qr terminal
     });
@@ -238,7 +261,8 @@ export class BotwsService {
     if (!this.conectedClients[user.id]) {
       this.conectedClients[user.id] = { socket: clientSocket, user };
     }
-    this.connectWhitWAW(user);
+    this.conectedClients[user.id].socket = clientSocket;
+    // this.connectWhitWAW(user);
   }
 
   removeClient(client: Socket) {

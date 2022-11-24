@@ -19,7 +19,6 @@ export class BotWebwhatsapController {
   @Get('qrcode')
   @Auth()
   qrcode(@GetUser() user: User): StreamableFile {
-    console.log(user);
     return this.botWebwhatsapService.qrcode(user);
   }
 

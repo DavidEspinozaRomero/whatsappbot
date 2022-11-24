@@ -16,27 +16,8 @@ export class BotWebwhatsapService {
   }
 
   //#region methods
-  //#emdregion methods
+  //#endregion methods
 
-  // create(createBotWebwhatsapDto: CreateBotWebwhatsapDto) {
-  //   return 'This action adds a new botWebwhatsap';
-  // }
-
-  // findAll() {
-  //   return `This action returns all botWebwhatsap`;
-  // }
-
-  // findOne(id: number) {
-  //   return `This action returns a #${id} botWebwhatsap`;
-  // }
-
-  // update(id: number, updateBotWebwhatsapDto: UpdateBotWebwhatsapDto) {
-  //   return `This action updates a #${id} botWebwhatsap`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} botWebwhatsap`;
-  // }
 }
 
 //#region interface

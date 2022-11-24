@@ -40,6 +40,30 @@ export class BotwsGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log('Cliente desconectado:', client.id);
   }
 
+  @SubscribeMessage('message-from-client')
+  async onMessageFromClient(
+    client: Socket,
+    clientMessage: { action: string; description: string }
+  ) {
+    const { action, description } = clientMessage;
+    const token = client.handshake.headers.authorization;
+    let payload: JwtPayload;
+    console.log(payload, action);
+    
+    try {
+      payload = this.jwtService.verify(token);
+      
+      if (action == 'connect') {
+        await this.botwsService.connectWhitWAW(client, payload.id);
+      }
+    } catch (error) {
+      console.log(error);
+
+      client.disconnect();
+      return;
+    }
+  }
+
   // async handleConnection(client: Socket, ...args: any[]) {
   //   const token = client.handshake.headers.authorization as string;
   //   let payload: JwtPayload;
