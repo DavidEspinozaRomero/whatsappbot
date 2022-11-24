@@ -275,9 +275,9 @@ export class BotwsService {
     return Object.keys(this.conectedClients);
   }
 
-  getUserFullName(socketId: string) {
-    return this.conectedClients[socketId].user.fullName;
-  }
+  // getUserFullName(socketId: string) {
+  //   return this.conectedClients[socketId].user.fullName;
+  // }
 
   checkUserConnection(user: User) {
     for (const clientId of Object.keys(this.conectedClients)) {
