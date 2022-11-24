@@ -57,6 +57,12 @@ git push heroku <branch>
 ```
 heroku git:remote -a wwmessagesmanager
 ```
+
+## Utils
+
+```
+heroku logs --tail
+```
 <!-- ## Running the app
 
 ```bash
