@@ -42,11 +42,17 @@ export class BotwsService {
       return;
     }
 
-    const payload = {
-      action: 'ready',
-      description: 'Client is ready!',
-    };
-    clientSocket.emit('message-from-server', payload);
+    const { client, socket } = this.conectedClients[user.id];
+    this.clientAuthenticated(client);
+    this.clientReady(client, socket, user);
+    this.clientQr(client, socket, user.id);
+    this.clientDisconect(client);
+
+    // const payload = {
+    //   action: 'ready',
+    //   description: 'Client is ready!',
+    // };
+    // clientSocket.emit('message-from-server', payload);
   }
 
   #createClient(user: User) {
