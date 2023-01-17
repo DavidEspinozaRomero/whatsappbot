@@ -1,6 +1,6 @@
 services:
 - type: web
-  name: next-js
+  name: nest-js
   env: node
   plan: starter
   buildCommand: yarn; yarn build
