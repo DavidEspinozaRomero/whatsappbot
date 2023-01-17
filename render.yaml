@@ -3,12 +3,16 @@ services:
   name: nest-js
   env: node
   plan: starter
-  buildCommand: yarn; yarn build
-  startCommand: yarn start
+  buildCommand: npm i; npm run build
+  startCommand: npm run start
   autoDeploy: false
   envVars:
   - key: NODE_ENV
     value: production
+  
+  # buildCommand: yarn; yarn build
+  # startCommand: yarn start
+
 # Uncomment the following to deploy this app as a static site on render
 # - type: web
 #   name: nextjs-static
