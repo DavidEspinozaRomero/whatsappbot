@@ -14,7 +14,7 @@ import { User } from '../auth/entities/user.entity';
 import { Message } from './entities/message.entity';
 import { CreateMessageDto, UpdateMessageDto } from './dto';
 import { TypeMessage } from './entities/typeMessage.entity';
-import { Category } from './entities/category.entity';
+import { Category, TypeCategory } from './entities/category.entity';
 
 @Injectable()
 export class MessagesService {
@@ -98,6 +98,18 @@ export class MessagesService {
     const message = await this.messageRepository.delete(id);
     if (!message.affected)
       throw new NotFoundException(`not found task whit id: ${id}`);
+  }
+
+  async addCategory(category: TypeCategory) {
+    try {
+      const newCategory: Category = await this.categoryRepository.create({
+        description: category,
+      });
+      await this.categoryRepository.save(newCategory);
+      return { message: 'category created', newCategory };
+    } catch (err) {
+      this.handleExceptions(err);
+    }
   }
 
   async getCategories() {

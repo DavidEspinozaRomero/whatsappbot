@@ -1,9 +1,13 @@
 import { Module } from '@nestjs/common';
-import { SeedService } from './seed.service';
+
 import { SeedController } from './seed.controller';
+import { SeedService } from './seed.service';
+import { AuthModule, AuthService } from '../auth';
+import { MessagesModule, MessagesService } from '../messages';
 
 @Module({
   controllers: [SeedController],
-  providers: [SeedService]
+  providers: [SeedService, AuthService, MessagesService],
+  imports: [AuthModule, MessagesModule],
 })
 export class SeedModule {}

@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Message } from './message.entity';
 
 @Entity('categories')
@@ -7,7 +7,7 @@ export class Category {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column('text')
+  @Column('text', { unique: true })
   description: TypeCategory;
   //#endregion Columns
 
@@ -25,5 +25,5 @@ export const enum TypeCategory {
   family = 'family',
   friend = 'friend',
   bussiness = 'bussiness',
-  informative = 'informatevo',
+  informative = 'informative',
 }

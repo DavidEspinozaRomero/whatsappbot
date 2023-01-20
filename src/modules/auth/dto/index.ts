@@ -1,3 +1,3 @@
-export { LogInUserDto } from './login-user.dto';
-export { CreateUserDto } from './create-user.dto';
-export { UpdateUserDto } from './update-user.dto';
+export * from './create-user.dto';
+export * from './login-user.dto';
+export * from './update-user.dto';
