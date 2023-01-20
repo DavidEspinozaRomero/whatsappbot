@@ -15,11 +15,14 @@ import { Message } from './entities/message.entity';
 import { CreateMessageDto, UpdateMessageDto } from './dto';
 import { TypeMessage } from './entities/typeMessage.entity';
 import { Category, TypeCategory } from './entities/category.entity';
+import { initialData } from '../seed/data/initialData';
 
 @Injectable()
 export class MessagesService {
   //#region variables
   private readonly logger = new Logger('MessagesService');
+  #defaultMsgs: CreateMessageDto[] = initialData.messages;
+
   //#endregion variables
   constructor(
     @InjectRepository(Message)
@@ -44,6 +47,10 @@ export class MessagesService {
     } catch (err) {
       this.handleExceptions(err);
     }
+  }
+
+  async default(user: User) {
+    return this.#defaultMsgs.map(async (msg) => await this.create(msg, user));
   }
 
   async findAll(query: PaginationDTO, user: User) {

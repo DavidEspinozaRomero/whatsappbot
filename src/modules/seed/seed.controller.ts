@@ -11,10 +11,14 @@ export class SeedController {
   testseed(){
     return {message: 'seed'}
   }
-  
+
   @Get('/init')
   init(){
     return this.seedService.init()
   }
-
+  
+  @Get('/initdev')
+  initDev(){
+    return this.seedService.initdev()
+  }
 }

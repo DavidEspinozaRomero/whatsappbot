@@ -15,6 +15,7 @@ import { CreateUserDto, UpdateUserDto } from './dto';
 import { User } from './entities/user.entity';
 import { LogInUserDto } from './dto/login-user.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
+import { MessagesService } from '../messages';
 
 @Injectable()
 export class AuthService {
@@ -25,7 +26,7 @@ export class AuthService {
   constructor(
     @InjectRepository(User)
     private readonly authRepository: Repository<User>,
-    private readonly jwtService: JwtService
+    private readonly jwtService: JwtService,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -37,6 +38,7 @@ export class AuthService {
       });
       await this.authRepository.save(newUser);
       delete newUser.password;
+
       return {
         message: 'User Created',
         user: { ...newUser },

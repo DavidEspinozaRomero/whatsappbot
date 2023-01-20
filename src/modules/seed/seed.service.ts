@@ -15,8 +15,12 @@ export class SeedService {
 
   async init() {
     await this.#insertCategories();
+    return { message: 'init seed ejecuted' };
+  }
+  async initdev() {
+    await this.#insertCategories();
     await this.#insertUsers();
-    return { message: 'init seed ejecuted 1' };
+    return { message: 'init:dev seed ejecuted' };
   }
 
   async #insertUsers() {

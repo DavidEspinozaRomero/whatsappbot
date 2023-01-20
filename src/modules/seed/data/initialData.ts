@@ -1,4 +1,5 @@
 import { CreateUserDto } from 'src/modules/auth/dto';
+import { CreateMessageDto } from 'src/modules/messages';
 import { Category, TypeCategory } from 'src/modules/messages/entities';
 import { CreateCategoryDTO } from 'src/modules/messages/entities/create-category.dto';
 
@@ -15,7 +16,15 @@ const Categories: CreateCategoryDTO[] = [
     { description: TypeCategory.informative },
 ];
 
+const Messages: CreateMessageDto[] =  [
+  {answer: 'hola', query: 'Hola! Bienvenido', category: 2, startTime: '08:00', endTime: '20:00'},
+  {answer: 'precio', query: 'el precio es de 5.00$', category: 1, startTime: '06:00', endTime: '18:00'},
+  {answer: 'como estas', query: 'Hola! Todo bien gracias y tu como estas?', category: 3, startTime: '10:00', endTime: '22:00'},
+  {answer: '', query: 'Hola! atendemos de 8Am a 8Pm', category: 2, startTime: '20:00', endTime: '8:00'},
+]
+
 export const initialData = {
   users: Users,
   categories: Categories,
+  messages: Messages
 };
