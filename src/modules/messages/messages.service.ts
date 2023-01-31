@@ -9,7 +9,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 
 import { PaginationDTO } from '../common/dto/pagination.dto';
-
 import { User } from '../auth/entities/user.entity';
 import { Message } from './entities/message.entity';
 import { CreateMessageDto, UpdateMessageDto } from './dto';

@@ -179,9 +179,7 @@ export class BotwsService {
     }
     const { answer } = find;
 
-    setTimeout(() => {
-      this.sendMessage(client, from, answer);
-    }, 1000);
+    this.sendMessage(client, from, answer);
 
     // TODO: llamar a la api para responder segun el texto
     // if (body.toLowerCase().includes('link')) {
