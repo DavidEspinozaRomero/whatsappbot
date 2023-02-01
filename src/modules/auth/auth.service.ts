@@ -15,7 +15,7 @@ import { CreateUserDto, UpdateUserDto } from './dto';
 import { User } from './entities/user.entity';
 import { LogInUserDto } from './dto/login-user.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
-import { MessagesService } from '../messages';
+import { MailerCustomService } from 'src/services/mailer-custom.service';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +27,7 @@ export class AuthService {
     @InjectRepository(User)
     private readonly authRepository: Repository<User>,
     private readonly jwtService: JwtService,
+    private readonly mailerCustomService: MailerCustomService
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -38,6 +39,8 @@ export class AuthService {
       });
       await this.authRepository.save(newUser);
       delete newUser.password;
+
+      this.sendMail(newUser)
 
       return {
         message: 'User Created',
@@ -85,6 +88,9 @@ export class AuthService {
     throw new InternalServerErrorException(
       'Unexpected error, check server logs'
     );
+  }
+  sendMail(user: User) {
+    return this.mailerCustomService.sendMail(user);
   }
   // #endregion  methods
 
