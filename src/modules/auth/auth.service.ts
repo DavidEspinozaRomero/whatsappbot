@@ -15,7 +15,9 @@ import { CreateUserDto, UpdateUserDto } from './dto';
 import { User } from './entities/user.entity';
 import { LogInUserDto } from './dto/login-user.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
-import { MailerCustomService } from 'src/services/mailer-custom.service';
+import { MailerService } from '@nestjs-modules/mailer';
+import { isEmail } from 'class-validator';
+import { NotFoundException } from '@nestjs/common/exceptions';
 
 @Injectable()
 export class AuthService {
@@ -27,7 +29,7 @@ export class AuthService {
     @InjectRepository(User)
     private readonly authRepository: Repository<User>,
     private readonly jwtService: JwtService,
-    private readonly mailerCustomService: MailerCustomService
+    private readonly mailerService: MailerService
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -40,12 +42,9 @@ export class AuthService {
       await this.authRepository.save(newUser);
       delete newUser.password;
 
-      this.sendMail(newUser)
-
+      this.confirmMail(newUser, this.getJwtToken({ id: newUser.id }));
       return {
         message: 'User Created',
-        user: { ...newUser },
-        token: this.getJwtToken({ id: newUser.id }),
       };
     } catch (err) {
       this.handleExceptions(err);
@@ -89,9 +88,72 @@ export class AuthService {
       'Unexpected error, check server logs'
     );
   }
-  sendMail(user: User) {
-    return this.mailerCustomService.sendMail(user);
+
+  async verifyEmail(token: string) {
+    const payload = this.jwtService.verify(token);
+    const user = await this.authRepository.preload({
+      ...payload,
+      isEmail: true,
+    });
+    console.log(user);
+    
+    if (!user) throw new NotFoundException(`User whit #${user.id} not found`);
+    try {
+      await this.authRepository.save(user);
+      return { message: `This action validate a #${user.username} email` };
+    } catch (err) {
+      this.handleExceptions(err);
+    }
   }
+
+  confirmMail(user: User, token: string) {
+    const { username, email } = user;
+    const htmlDefaultTemplate = `
+    <div>
+    <p>
+      Gracias ${username}.
+      <br />
+      Por favor confirma tu correo.
+    </p>
+  
+    <a
+      class="btn btn-primary"
+      href="https://wwbot.netlify.app/#/auth/verify-email?token=${token}"
+      role="button"
+    >
+      https://wwbot.netlify.app/#/auth/verify-email?token=${token}
+    </a>
+    <a
+      class="btn btn-primary"
+      href="https://wwbot.netlify.app/#/auth/verify-email?token=${token}"
+      role="button"
+    >
+      <button
+        type="button"
+        style="padding: 0.5rem 1rem; color: snow; background-color: blue; border: 0; border-radius: 1rem; "
+      >
+        Confirmar email
+      </button>
+    </a>
+  </div>  
+  `;
+
+    const mailOptions = {
+      to: email, // list of receivers
+      from: 'deerhou@gmail.com', // sender address
+      subject: 'Testing Nest MailerModule ✔', // Subject line
+      // text: 'welcome', // plaintext body
+      html: htmlDefaultTemplate, // HTML body content
+    };
+
+    this.mailerService
+      .sendMail(mailOptions)
+      .then(() => null)
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
   // #endregion  methods
 
   // findAll() {

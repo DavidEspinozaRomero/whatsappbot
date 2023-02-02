@@ -9,6 +9,7 @@ import { BotWebwhatsapModule } from './modules/bot-webwhatsap/bot-webwhatsap.mod
 import { BotwsModule } from './modules/botws/botws.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { MailerCustomService } from './services';
 
 @Module({
   imports: [
@@ -40,7 +41,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
       },
       // defaults: {
       //   from: '"No Reply" <no-reply@localhost>',
-      // }, 
+      // },
       // template: {
       //   dir: __dirname + '/templates',
       //   adapter: new PugAdapter(),
@@ -57,6 +58,6 @@ import { MailerModule } from '@nestjs-modules/mailer';
     MessagesModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [MailerCustomService],
 })
 export class AppModule {}

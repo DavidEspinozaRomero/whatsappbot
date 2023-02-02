@@ -25,6 +25,13 @@ export class AuthController {
     return this.authService.checkAuthStatus(user);
   }
 
+  @Post('verify-email')
+  verifyEmail(@Body() body: { token: string }) {
+    const { token } = body;
+
+    return this.authService.verifyEmail(token);
+  }
+
   @Get('private')
   @Auth(ValidRoles.user, ValidRoles.superUser)
   privateRoute(@GetUser() user: User) {
