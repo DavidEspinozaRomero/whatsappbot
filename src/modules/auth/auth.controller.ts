@@ -32,6 +32,20 @@ export class AuthController {
     return this.authService.verifyEmail(token);
   }
 
+  @Post('forgot-password')
+  forgotPassword(@Body() body: { email: string }) {
+    const { email } = body;
+
+    return this.authService.forgotPassword(email);
+  }
+
+  @Post('restore-password')
+  restorePassword(@Body() body: { token: string, password }) {
+    const { token, password } = body;
+
+    return this.authService.restorePassword(token, password);
+  }
+
   @Get('private')
   @Auth(ValidRoles.user, ValidRoles.superUser)
   privateRoute(@GetUser() user: User) {

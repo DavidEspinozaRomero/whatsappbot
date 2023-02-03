@@ -95,8 +95,7 @@ export class AuthService {
       ...payload,
       isEmail: true,
     });
-    console.log(user);
-    
+
     if (!user) throw new NotFoundException(`User whit #${user.id} not found`);
     try {
       await this.authRepository.save(user);
@@ -104,6 +103,14 @@ export class AuthService {
     } catch (err) {
       this.handleExceptions(err);
     }
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.authRepository.findOneBy({ email });
+
+    if (!user) return {};
+    const token = this.getJwtToken({ id: user.id });
+    this.forgotPasswordMail(user, token);
   }
 
   confirmMail(user: User, token: string) {
@@ -123,6 +130,7 @@ export class AuthService {
     >
       https://wwbot.netlify.app/#/auth/verify-email?token=${token}
     </a>
+    <br>
     <a
       class="btn btn-primary"
       href="https://wwbot.netlify.app/#/auth/verify-email?token=${token}"
@@ -152,6 +160,69 @@ export class AuthService {
       .catch((err) => {
         console.log(err);
       });
+  }
+
+  forgotPasswordMail(user: User, token: string) {
+    const { username, email } = user;
+    const htmlDefaultTemplate = `
+    <div>
+    <p>
+      Hola ${username}, se a pedido un cambio de contrasena.
+    </p>
+  
+    <a
+      class="btn btn-primary"
+      href="https://wwbot.netlify.app/#/auth/restore-password?token=${token}"
+      role="button"
+    >
+      https://wwbot.netlify.app/#/auth/restore-password?token=${token}
+    </a>
+    <br>
+    <a
+      class="btn btn-primary"
+      href="https://wwbot.netlify.app/#/auth/restore-password?token=${token}"
+      role="button"
+    >
+      <button
+        type="button"
+        style="padding: 0.5rem 1rem; color: snow; background-color: blue; border: 0; border-radius: 1rem; "
+      >
+        Confirmar email
+      </button>
+    </a>
+  </div>  
+  `;
+
+    const mailOptions = {
+      to: email, // list of receivers
+      from: 'deerhou@gmail.com', // sender address
+      subject: 'Testing Nest MailerModule ✔', // Subject line
+      // text: 'welcome', // plaintext body
+      html: htmlDefaultTemplate, // HTML body content
+    };
+
+    this.mailerService
+      .sendMail(mailOptions)
+      .then(() => null)
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  async restorePassword(token: string, password: string) {
+    const payload = this.jwtService.verify(token);
+    const user = await this.authRepository.preload({
+      ...payload,
+      password: bcrypt.hashSync(password, 10),
+    });
+
+    if (!user) throw new NotFoundException(`User whit #${user.id} not found`);
+    try {
+      await this.authRepository.save(user);
+      return { message: `This action validate a #${user.username} email` };
+    } catch (err) {
+      this.handleExceptions(err);
+    }
   }
 
   // #endregion  methods
