@@ -10,6 +10,7 @@ import { BotwsModule } from './modules/botws/botws.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { MailerCustomService } from './services';
+import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -56,6 +57,7 @@ import { MailerCustomService } from './services';
     BotWebwhatsapModule,
     BotwsModule,
     MessagesModule,
+    PaymentsModule,
   ],
   controllers: [],
   providers: [MailerCustomService],

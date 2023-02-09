@@ -16,7 +16,6 @@ import { User } from './entities/user.entity';
 import { LogInUserDto } from './dto/login-user.dto';
 import { JwtPayload } from './strategies/jwt.strategy';
 import { MailerService } from '@nestjs-modules/mailer';
-import { isEmail } from 'class-validator';
 import { NotFoundException } from '@nestjs/common/exceptions';
 
 @Injectable()
@@ -75,18 +74,21 @@ export class AuthService {
     return { id, ...userData, token: this.getJwtToken({ id }) };
   }
 
-  // #region  methods
-  private getJwtToken(payload: JwtPayload) {
-    return this.jwtService.sign(payload);
-  }
+  async confirmPayment(user: User) {
+    const userPaid = await this.authRepository.preload({
+      ...user,
+      isPaid: true,
+    });
 
-  private handleExceptions(err: any): never {
-    if (err.code === '23505') throw new BadRequestException(err.detail);
+    if (!userPaid)
+      throw new NotFoundException(`User whit #${user.id} not found`);
 
-    this.logger.error(err);
-    throw new InternalServerErrorException(
-      'Unexpected error, check server logs'
-    );
+    try {
+      await this.authRepository.save(userPaid);
+      return { message: `This action validate a #${userPaid.username}` };
+    } catch (err) {
+      this.handleExceptions(err);
+    }
   }
 
   async verifyEmail(token: string) {
@@ -111,6 +113,36 @@ export class AuthService {
     if (!user) return {};
     const token = this.getJwtToken({ id: user.id });
     this.forgotPasswordMail(user, token);
+  }
+
+  async restorePassword(token: string, password: string) {
+    const payload = this.jwtService.verify(token);
+    const user = await this.authRepository.preload({
+      ...payload,
+      password: bcrypt.hashSync(password, 10),
+    });
+
+    if (!user) throw new NotFoundException(`User whit #${user.id} not found`);
+    try {
+      await this.authRepository.save(user);
+      return { message: `This action validate a #${user.username} email` };
+    } catch (err) {
+      this.handleExceptions(err);
+    }
+  }
+
+  // #region  methods
+  private getJwtToken(payload: JwtPayload) {
+    return this.jwtService.sign(payload);
+  }
+
+  private handleExceptions(err: any): never {
+    if (err.code === '23505') throw new BadRequestException(err.detail);
+
+    this.logger.error(err);
+    throw new InternalServerErrorException(
+      'Unexpected error, check server logs'
+    );
   }
 
   confirmMail(user: User, token: string) {
@@ -207,22 +239,6 @@ export class AuthService {
       .catch((err) => {
         console.log(err);
       });
-  }
-
-  async restorePassword(token: string, password: string) {
-    const payload = this.jwtService.verify(token);
-    const user = await this.authRepository.preload({
-      ...payload,
-      password: bcrypt.hashSync(password, 10),
-    });
-
-    if (!user) throw new NotFoundException(`User whit #${user.id} not found`);
-    try {
-      await this.authRepository.save(user);
-      return { message: `This action validate a #${user.username} email` };
-    } catch (err) {
-      this.handleExceptions(err);
-    }
   }
 
   // #endregion  methods
