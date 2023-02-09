@@ -92,8 +92,6 @@ export class BotwsService {
       // const info = await msg.getInfo();
       const chat = await msg.getChat();
 
-      console.log(chat.isGroup);
-
       // TODO: diferenciar cuando enviar mensajes
 
       if (user.isPaid) return;
