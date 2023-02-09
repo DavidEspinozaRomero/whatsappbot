@@ -87,6 +87,8 @@ export class BotwsService {
   private listenMessages(client: Client, user: User): void {
     console.log('Listen!');
     client.on('message', async (msg) => {
+      console.log(user);
+      
       // const contact: WAWebJS.Contact = await msg.getContact();
       // const info = await msg.getInfo();
       const chat = await msg.getChat();

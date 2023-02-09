@@ -27,7 +27,6 @@ export class CreateMessageDto {
 
   @IsNumber()
   @Min(1)
-  @Max(5)
   @IsOptional()
   category: number;
 }

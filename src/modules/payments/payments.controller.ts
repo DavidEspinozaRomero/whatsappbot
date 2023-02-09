@@ -19,7 +19,9 @@ export class PaymentsController {
 
   @Post('')
   @Auth()
-  confirmPayment(@GetUser() user: User) {
+  confirmPayment(@Body() body: unknown, @GetUser() user: User) {
+    console.log(body);
+
     return this.paymentsService.confirmPayment(user);
   }
 }
