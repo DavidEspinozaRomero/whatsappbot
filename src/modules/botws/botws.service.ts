@@ -35,6 +35,7 @@ export class BotwsService {
 
     if (!user) throw new Error('user not found');
     if (!user.isActive) throw new Error('user not active');
+    if (!user.isPaid) throw new Error('user not paid');
     // this.checkUserConnection(user);
 
     if (!this.conectedClients[user.id]?.client) {
@@ -87,8 +88,6 @@ export class BotwsService {
   private listenMessages(client: Client, user: User): void {
     console.log('Listen!');
     client.on('message', async (msg) => {
-      console.log(user);
-      
       // const contact: WAWebJS.Contact = await msg.getContact();
       // const info = await msg.getInfo();
       const chat = await msg.getChat();
@@ -97,9 +96,8 @@ export class BotwsService {
 
       // TODO: diferenciar cuando enviar mensajes
 
-      if (chat.isGroup) {
-        return;
-      }
+      if (!user.isPaid) return;
+      if (chat.isGroup) return;
 
       // TODO: agregar un metodo para almacenamiento de media files
       // if (hasMedia) {
