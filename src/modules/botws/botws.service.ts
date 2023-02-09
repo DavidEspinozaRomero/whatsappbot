@@ -96,7 +96,7 @@ export class BotwsService {
 
       // TODO: diferenciar cuando enviar mensajes
 
-      if (!user.isPaid) return;
+      if (user.isPaid) return;
       if (chat.isGroup) return;
 
       // TODO: agregar un metodo para almacenamiento de media files
