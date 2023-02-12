@@ -1,9 +1,4 @@
-import {
-  Column,
-  Entity,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../../auth/entities/user.entity';
 import { Category } from './category.entity';
 
@@ -13,15 +8,15 @@ export class Message {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column('text')
-  query: string;
+  @Column('text', { array: true, default: [] })
+  keywords: string[];
 
   @Column('text')
   answer: string;
 
   @Column('text')
   startTime: string;
-  
+
   @Column('text')
   endTime: string;
   //#endregion Columns
@@ -32,8 +27,8 @@ export class Message {
 
   // @ManyToOne(() => TypeMessage, type => type.description)
   // type: TypeMessage;
-  
-  @ManyToOne(() => Category, category => category.description)
+
+  @ManyToOne(() => Category, (category) => category.description)
   category: Category;
   // contactos
   //#endregion Relations

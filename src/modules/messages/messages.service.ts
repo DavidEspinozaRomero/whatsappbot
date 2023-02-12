@@ -64,6 +64,8 @@ export class MessagesService {
 
       const allmessages = await query.getMany();
       const data = allmessages.map((message) => {
+        console.log(message);
+        
         const { category, ...dataMessage } = message;
 
         return { ...dataMessage, category: category.description };

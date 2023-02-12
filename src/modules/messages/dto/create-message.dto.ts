@@ -1,4 +1,5 @@
 import {
+  IsArray,
   IsNumber,
   IsOptional,
   IsString,
@@ -9,9 +10,8 @@ import {
 
 export class CreateMessageDto {
 
-  @IsString()
-  @MinLength(2)
-  query: string;
+  @IsArray()
+  keywords: string[];
 
   @IsString()
   @MinLength(2)

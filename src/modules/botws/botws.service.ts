@@ -44,16 +44,16 @@ export class BotwsService {
     }
 
     const { client, socket } = this.conectedClients[user.id];
-    // this.clientAuthenticated(client);
-    // this.clientReady(client, socket, user);
-    // this.clientQr(client, socket, user.id);
-    // this.clientDisconect(client);
+    this.clientAuthenticated(client);
+    this.clientReady(client, socket, user);
+    this.clientQr(client, socket, user.id);
+    this.clientDisconect(client);
 
-    // const payload = {
-    //   action: 'ready',
-    //   description: 'Client is ready!',
-    // };
-    // clientSocket.emit('message-from-server', payload);
+    const payload = {
+      action: 'ready',
+      description: 'Client is ready!',
+    };
+    clientSocket.emit('message-from-server', payload);
   }
 
   #createClient(user: User) {
@@ -94,8 +94,7 @@ export class BotwsService {
 
       // TODO: diferenciar cuando enviar mensajes
 
-      if (user.isPaid) return;
-      if (chat.isGroup) return;
+      if (this.#responseMsg(!user.isPaid, chat.isGroup)) return;
 
       // TODO: agregar un metodo para almacenamiento de media files
       // if (hasMedia) {
@@ -147,6 +146,10 @@ export class BotwsService {
     fs.unlinkSync(filePath);
   }
 
+  #responseMsg(isPaid: boolean, isGroup: boolean): boolean {
+    return !isPaid || isGroup;
+  }
+
   getDBQuestionAnswer(user: User) {
     const query: PaginationDTO = { limit: 10, offset: 0 };
     return this.messagesService.findAll(query, user);
@@ -168,8 +171,8 @@ export class BotwsService {
     // data = this.filterByCategory(data);
 
     // TODO: agregar un tipo al mensage (texto/imagen/audio/url)
-    const find = data.find(
-      ({ query }) => body.toLowerCase() == query.toLowerCase()
+    const find = data.find(({ keywords }) =>
+      keywords.includes(body.toLowerCase())
     );
 
     if (!find) {
@@ -215,12 +218,12 @@ export class BotwsService {
   }
 
   filterByString(arr: QuestionAnwer[], message: string): QuestionAnwer[] {
-    return arr.filter(({ query }) =>
-      message.toLowerCase().includes(query.toLowerCase())
+    return arr.filter(({ keywords }) =>
+      keywords.includes(message.toLowerCase())
     );
   }
 
-  // TODO: mejorar el filtro por tiempo st 19:00 et 18:00 (solo 1 hora no se enviaria este mensaje de 18 a 19)
+  // TODO: mejorar el filtro por tiempo {st: 19:00, et: 18:00} (solo 1 hora no se enviaria este mensaje de 18 a 19)
   filterByTime(arr: QuestionAnwer[], now: string): QuestionAnwer[] {
     return arr.filter(
       ({ startTime, endTime }) => startTime <= now && now <= endTime

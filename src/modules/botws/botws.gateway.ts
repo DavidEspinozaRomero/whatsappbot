@@ -28,7 +28,6 @@ export class BotwsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       payload = this.jwtService.verify(token);
       await this.botwsService.registerClient(client, payload.id);
     } catch (error) {
-      console.log(error);
 
       client.disconnect();
       return;
