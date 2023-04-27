@@ -5,8 +5,8 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './modules/auth/auth.module';
 import { SeedModule } from './modules/seed/seed.module';
 import { CommonModule } from './modules/common/common.module';
-import { BotWebwhatsapModule } from './modules/bot-webwhatsap/bot-webwhatsap.module';
-import { BotwsModule } from './modules/botws/botws.module';
+// import { BotWebwhatsapModule } from './modules/bot-webwhatsap/bot-webwhatsap.module';
+// import { BotwsModule } from './modules/botws/botws.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { MailerCustomService } from './services';
@@ -54,8 +54,8 @@ import { PaymentsModule } from './modules/payments/payments.module';
     AuthModule,
     SeedModule,
     CommonModule,
-    BotWebwhatsapModule,
-    BotwsModule,
+    // BotWebwhatsapModule,
+    // BotwsModule,
     MessagesModule,
     PaymentsModule,
   ],
