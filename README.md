@@ -1,9 +1,20 @@
 
+# WhatsApp Bot
 ## Description
 
 rest api web whatsapp para gestionar mensajes, contactos, por medio de un bot
+## Index
 
-## Installation
+- [Description](#description)
+- [Index](#index)
+- [Development Installation](#instalación)
+- [Deploy App](#deploy-app)
+- [Heroku](#heroku)
+<!-- - [Funcionalidades](#funcionalidades) -->
+<!-- - [Como enviar tu solución](#como-enviar-tu-solución) -->
+- [Licencia](#licencia)
+<!-- - [Credits](#credits) -->
+## Development Installation
 
 1. Clonar el proyecto
 
@@ -30,7 +41,7 @@ yarn start:dev
 http://localhost:3000/api/seed
 
 
-## Deploy app
+## Deploy App
 
 ### Heroku
 
@@ -83,3 +94,7 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ``` -->
+
+## Licencia
+
+Este proyecto se lanza bajo la licencia [MIT](https://opensource.org/licenses/MIT).

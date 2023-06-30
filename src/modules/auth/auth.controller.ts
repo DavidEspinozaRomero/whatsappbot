@@ -25,12 +25,12 @@ export class AuthController {
     return this.authService.checkAuthStatus(user);
   }
 
-  @Post('verify-email')
-  verifyEmail(@Body() body: { token: string }) {
-    const { token } = body;
+  // @Post('verify-email')
+  // verifyEmail(@Body() body: { token: string }) {
+  //   const { token } = body;
 
-    return this.authService.verifyEmail(token);
-  }
+  //   return this.authService.verifyEmail(token);
+  // }
 
   @Post('forgot-password')
   forgotPassword(@Body() body: { email: string }) {
@@ -39,12 +39,12 @@ export class AuthController {
     return this.authService.forgotPassword(email);
   }
 
-  @Post('restore-password')
-  restorePassword(@Body() body: { token: string, password }) {
-    const { token, password } = body;
+  // @Post('restore-password')
+  // restorePassword(@Body() body: { token: string, password }) {
+  //   const { token, password } = body;
 
-    return this.authService.restorePassword(token, password);
-  }
+  //   return this.authService.restorePassword(token, password);
+  // }
 
   @Get('private')
   @Auth(ValidRoles.user, ValidRoles.superUser)

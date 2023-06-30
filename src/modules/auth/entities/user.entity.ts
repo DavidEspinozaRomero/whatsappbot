@@ -26,6 +26,12 @@ export class User {
   @Column('text')
   password: string;
 
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  createdAt: Date;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  updatedAt: Date;
+
   @Column('bool', { default: true })
   isActive: boolean;
   
@@ -33,7 +39,7 @@ export class User {
   isEmail: boolean;
   
   @Column('bool', { default: false })
-  isPaid: boolean;
+  hasPaid: boolean;
 
   @Column('text', { array: true, default: ['user'] })
   roles: string[];

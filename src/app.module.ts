@@ -2,15 +2,14 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule } from '@nestjs/config';
 
-import { AuthModule } from './modules/auth/auth.module';
+// import { AuthModule } from './modules/auth/auth.module';
 import { SeedModule } from './modules/seed/seed.module';
 import { CommonModule } from './modules/common/common.module';
 // import { BotWebwhatsapModule } from './modules/bot-webwhatsap/bot-webwhatsap.module';
 // import { BotwsModule } from './modules/botws/botws.module';
 import { MessagesModule } from './modules/messages/messages.module';
-import { MailerModule } from '@nestjs-modules/mailer';
-import { MailerCustomService } from './services';
-import { PaymentsModule } from './modules/payments/payments.module';
+// import { MailerModule } from '@nestjs-modules/mailer';
+// import { PaymentsModule } from './modules/payments/payments.module';
 
 @Module({
   imports: [
@@ -29,37 +28,37 @@ import { PaymentsModule } from './modules/payments/payments.module';
       autoLoadEntities: true,
       synchronize: true,
     }),
-    MailerModule.forRoot({
-      transport: {
-        host: 'smtp.gmail.com',
-        port: 465,
-        ignoreTLS: true,
-        secure: true,
-        auth: {
-          user: process.env.EMAIL,
-          pass: process.env.EMAILPASS,
-        },
-      },
-      // defaults: {
-      //   from: '"No Reply" <no-reply@localhost>',
-      // },
-      // template: {
-      //   dir: __dirname + '/templates',
-      //   adapter: new PugAdapter(),
-      //   options: {
-      //     strict: true,
-      //   },
-      // },
-    }),
-    AuthModule,
+    // MailerModule.forRoot({
+    //   transport: {
+    //     host: 'smtp.gmail.com',
+    //     port: 465,
+    //     ignoreTLS: true,
+    //     secure: true,
+    //     auth: {
+    //       user: process.env.EMAIL,
+    //       pass: process.env.EMAILPASS,
+    //     },
+    //   },
+    //   // defaults: {
+    //   //   from: '"No Reply" <no-reply@localhost>',
+    //   // },
+    //   // template: {
+    //   //   dir: __dirname + '/templates',
+    //   //   adapter: new PugAdapter(),
+    //   //   options: {
+    //   //     strict: true,
+    //   //   },
+    //   // },
+    // }),
+    // AuthModule,
     SeedModule,
     CommonModule,
     // BotWebwhatsapModule,
     // BotwsModule,
     MessagesModule,
-    PaymentsModule,
+    // PaymentsModule,
   ],
   controllers: [],
-  providers: [MailerCustomService],
+  providers: [],
 })
 export class AppModule {}

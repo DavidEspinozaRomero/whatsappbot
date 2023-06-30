@@ -17,11 +17,11 @@ import { NotFoundException } from '@nestjs/common/exceptions';
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}
 
-  @Post('')
-  @Auth()
-  confirmPayment(@Body() body: unknown, @GetUser() user: User) {
-    console.log(body);
+  // @Post('')
+  // @Auth()
+  // confirmPayment(@Body() body: unknown, @GetUser() user: User) {
+  //   console.log(body);
 
-    return this.paymentsService.confirmPayment(user);
-  }
+  //   return this.paymentsService.confirmPayment(user);
+  // }
 }
