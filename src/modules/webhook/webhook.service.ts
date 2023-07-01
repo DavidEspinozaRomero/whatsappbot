@@ -1,9 +1,39 @@
 import { Injectable } from '@nestjs/common';
+
+import { Client, LocalAuth } from 'whatsapp-web.js';
+import qrcode from 'qrcode-terminal';
+
 import { CreateWebhookDto } from './dto/create-webhook.dto';
 import { UpdateWebhookDto } from './dto/update-webhook.dto';
 
 @Injectable()
 export class WebhookService {
+  constructor() {
+    const client = new Client({
+      authStrategy: new LocalAuth({
+        dataPath: './sessions/',
+        clientId: 'test',
+      }),
+      puppeteer: { headless: true },
+    });
+
+    client.on('qr', (qr) => {
+      console.log('QR RECEIVED', qr);
+      qrcode.generate(qr, { small: true });
+      console.log('qr end');
+    });
+
+    client.on('ready', () => {
+      console.log('Client is ready!');
+    });
+
+    client.on('message', (message) => {
+      console.log(message.body);
+      message.reply('pong');
+    });
+
+    client.initialize();
+  }
   create(createWebhookDto: CreateWebhookDto) {
     return 'This action adds a new webhook';
   }

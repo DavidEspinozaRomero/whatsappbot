@@ -8,26 +8,28 @@ import { CommonModule } from './modules/common/common.module';
 // import { BotWebwhatsapModule } from './modules/bot-webwhatsap/bot-webwhatsap.module';
 // import { BotwsModule } from './modules/botws/botws.module';
 import { MessagesModule } from './modules/messages/messages.module';
-// import { MailerModule } from '@nestjs-modules/mailer';
-// import { PaymentsModule } from './modules/payments/payments.module';
+import { MailerModule } from '@nestjs-modules/mailer';
+// import { MailerCustomService } from './services';
+import { PaymentsModule } from './modules/payments/payments.module';
+import { WebhookModule } from './modules/webhook/webhook.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    TypeOrmModule.forRoot({
-      ssl: process.env.STAGE == 'prod',
-      extra: {
-        ssl: process.env.STAGE == 'prod' ? { rejectUnauthorized: false } : null,
-      },
-      type: 'postgres',
-      host: process.env.DB_HOST,
-      port: +process.env.DB_PORT,
-      username: process.env.DB_USERNAME,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_DATABASE,
-      autoLoadEntities: true,
-      synchronize: true,
-    }),
+    // ConfigModule.forRoot(),
+    // TypeOrmModule.forRoot({
+    //   ssl: process.env.STAGE == 'prod',
+    //   extra: {
+    //     ssl: process.env.STAGE == 'prod' ? { rejectUnauthorized: false } : null,
+    //   },
+    //   type: 'postgres',
+    //   host: process.env.DB_HOST,
+    //   port: +process.env.DB_PORT,
+    //   username: process.env.DB_USERNAME,
+    //   password: process.env.DB_PASSWORD,
+    //   database: process.env.DB_DATABASE,
+    //   autoLoadEntities: true,
+    //   synchronize: true,
+    // }),
     // MailerModule.forRoot({
     //   transport: {
     //     host: 'smtp.gmail.com',
@@ -51,14 +53,15 @@ import { MessagesModule } from './modules/messages/messages.module';
     //   // },
     // }),
     // AuthModule,
-    SeedModule,
-    CommonModule,
+    // SeedModule,
+    // CommonModule,
     // BotWebwhatsapModule,
     // BotwsModule,
-    MessagesModule,
+    // MessagesModule,
     // PaymentsModule,
+    WebhookModule,
   ],
   controllers: [],
-  providers: [],
+  // providers: [MailerCustomService],
 })
 export class AppModule {}
