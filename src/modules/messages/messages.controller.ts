@@ -20,7 +20,7 @@ export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
   @Post()
-  @Auth()
+  // @Auth()
   create(@Body() createMessageDto: CreateMessageDto, @GetUser() user: User) {
     return this.messagesService.create(createMessageDto, user);
   }
@@ -35,7 +35,7 @@ export class MessagesController {
   // }
 
   @Get()
-  @Auth()
+  // @Auth()
   findAll(@Param() query: PaginationDTO, @GetUser() user: User) {
     return this.messagesService.findAll(query, user);
   }
@@ -53,13 +53,13 @@ export class MessagesController {
   // }
 
   @Get('/get-categories')
-  @Auth(ValidRoles.user)
+  // @Auth(ValidRoles.user)
   getAllCategories() {
     return this.messagesService.getCategories();
   }
 
   @Get(':id')
-  @Auth()
+  // @Auth()
   findOne(@Param('id') id: string, @GetUser() user: User) {
     return this.messagesService.findOne(+id, user);
   }
@@ -70,7 +70,7 @@ export class MessagesController {
   }
 
   @Delete(':id')
-  @Auth()
+  // @Auth()
   remove(@Param('id') id: string, @GetUser() user: User) {
     return this.messagesService.remove(id, user);
   }

@@ -1,35 +1,46 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
-import { User } from '../../auth/entities/user.entity';
-import { Category } from './category.entity';
+import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+// import { User } from '../../auth/entities/user.entity';
+// import { Category } from './category.entity';
+import { Contact } from '../../contacts/entities/contact.entity';
+import { Response } from 'src/modules/responses/entities/response.entity';
 
 @Entity('messages')
 export class Message {
   //#region Columns
   @PrimaryGeneratedColumn('increment')
-  id: number;
+  message_id: number;
 
-  @Column('text', { array: true, default: [] })
-  keywords: string[];
-
-  @Column('text')
-  answer: string;
+  // @Column('text', { array: true, default: [] })
+  // keywords: string[];
 
   @Column('text')
-  startTime: string;
+  content: string;
 
   @Column('text')
-  endTime: string;
+  send_at: string;
+
+  @ManyToOne(() => Contact, (contact) => contact.message)
+  contact: Contact;
+
+  @OneToOne(() => Response)
+  @JoinColumn()
+  response: Response;
+  // @Column('text')
+  // startTime: string;
+
+  // @Column('text')
+  // endTime: string;
   //#endregion Columns
 
   //#region Relations
-  @ManyToOne(() => User, (user) => user.message)
-  user: User;
+  // @ManyToOne(() => User, (user) => user.message)
+  // user: User;
 
   // @ManyToOne(() => TypeMessage, type => type.description)
   // type: TypeMessage;
 
-  @ManyToOne(() => Category, (category) => category.description)
-  category: Category;
+  // @ManyToOne(() => Category, (category) => category.description)
+  // category: Category;
   // contactos
   //#endregion Relations
 
