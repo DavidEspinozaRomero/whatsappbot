@@ -3,22 +3,22 @@ import { SeedService } from './seed.service';
 
 @Controller('seed')
 export class SeedController {
-  constructor(
-    private readonly seedService: SeedService,
-    ) {}
+  // constructor(
+  //   private readonly seedService: SeedService,
+  //   ) {}
 
-  @Get('/')
-  testseed(){
-    return {message: 'seed'}
-  }
+  // @Get('/')
+  // testseed(){
+  //   return {message: 'seed'}
+  // }
 
-  @Get('/init')
-  init(){
-    return this.seedService.init()
-  }
+  // @Get('/init')
+  // init(){
+  //   return this.seedService.init()
+  // }
   
-  @Get('/initdev')
-  initDev(){
-    return this.seedService.initdev()
-  }
+  // @Get('/initdev')
+  // initDev(){
+  //   return this.seedService.initdev()
+  // }
 }

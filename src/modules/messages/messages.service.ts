@@ -19,121 +19,121 @@ import { initialData } from '../seed/data/initialData';
 @Injectable()
 export class MessagesService {
   //#region variables
-  private readonly logger = new Logger('MessagesService');
-  #defaultMsgs: CreateMessageDto[] = initialData.messages;
+  // private readonly logger = new Logger('MessagesService');
+  // #defaultMsgs: CreateMessageDto[] = initialData.messages;
 
   //#endregion variables
   constructor(
     @InjectRepository(Message)
     private readonly messageRepository: Repository<Message>,
-    @InjectRepository(TypeMessage)
-    private readonly typeMessageRepository: Repository<TypeMessage>,
-    @InjectRepository(Category)
-    private readonly categoryRepository: Repository<Category>
+    // @InjectRepository(TypeMessage)
+    // private readonly typeMessageRepository: Repository<TypeMessage>,
+    // @InjectRepository(Category)
+    // private readonly categoryRepository: Repository<Category>
   ) {}
 
-  async create(createMessageDto: CreateMessageDto, user: User) {
-    try {
-      const category = { id: createMessageDto.category };
-      const newMessage: Message = this.messageRepository.create({
-        ...createMessageDto,
-        category,
-        user,
-      });
-      await this.messageRepository.save(newMessage);
-      delete newMessage.user;
-      return { message: 'mensaje agregado', ...newMessage };
-    } catch (err) {
-      this.handleExceptions(err);
-    }
-  }
+  // async create(createMessageDto: CreateMessageDto, user: User) {
+  //   try {
+  //     const category = { id: createMessageDto.category };
+  //     const newMessage: Message = this.messageRepository.create({
+  //       ...createMessageDto,
+  //       category,
+  //       user,
+  //     });
+  //     await this.messageRepository.save(newMessage);
+  //     delete newMessage.user;
+  //     return { message: 'mensaje agregado', ...newMessage };
+  //   } catch (err) {
+  //     this.handleExceptions(err);
+  //   }
+  // }
 
-  async default(user: User) {
-    return this.#defaultMsgs.map(async (msg) => await this.create(msg, user));
-  }
+  // async default(user: User) {
+  //   return this.#defaultMsgs.map(async (msg) => await this.create(msg, user));
+  // }
 
-  async findAll(query: PaginationDTO, user: User) {
-    const { limit = 10, offset = 0 } = query;
-    try {
-      const query = this.messageRepository.createQueryBuilder('messages');
-      query
-        .where({ user })
-        .skip(offset)
-        .take(limit)
-        .leftJoinAndSelect('messages.category', 'category');
+  // async findAll(query: PaginationDTO, user: User) {
+  //   const { limit = 10, offset = 0 } = query;
+  //   try {
+  //     const query = this.messageRepository.createQueryBuilder('messages');
+  //     query
+  //       .where({ user })
+  //       .skip(offset)
+  //       .take(limit)
+  //       .leftJoinAndSelect('messages.category', 'category');
 
-      const allmessages = await query.getMany();
-      const data = allmessages.map((message) => {
-        console.log(message);
+  //     const allmessages = await query.getMany();
+  //     const data = allmessages.map((message) => {
+  //       console.log(message);
         
-        const { category, ...dataMessage } = message;
+  //       const { category, ...dataMessage } = message;
 
-        return { ...dataMessage, category: category.description };
-      });
-      return { message: `This action returns all messages`, data };
-    } catch (err) {
-      console.log(err);
-    }
-  }
+  //       return { ...dataMessage, category: category.description };
+  //     });
+  //     return { message: `This action returns all messages`, data };
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // }
 
-  async findOne(id: number, user: User) {
-    const message = await this.messageRepository.findOne({
-      where: { id },
-    });
+  // async findOne(id: number, user: User) {
+  //   const message = await this.messageRepository.findOne({
+  //     where: { id },
+  //   });
 
-    if (!message) throw new NotFoundException('message not found');
+  //   if (!message) throw new NotFoundException('message not found');
 
-    return { message: `This action returns a #${id} message`, data: message };
-  }
+  //   return { message: `This action returns a #${id} message`, data: message };
+  // }
 
-  async update(id: number, updateMessageDto: UpdateMessageDto) {
-    const category = { id: updateMessageDto.category || 0 };
-    const msg = await this.messageRepository.preload({
-      id,
-      ...updateMessageDto,
-      category,
-    });
-    if (!msg) throw new NotFoundException(`Message whit #${id} not found`);
-    try {
-      await this.messageRepository.save(msg);
-      return { message: `This action updates a #${id} message`, data: msg };
-    } catch (err) {
-      this.handleExceptions(err);
-    }
-  }
+  // async update(id: number, updateMessageDto: UpdateMessageDto) {
+  //   const category = { id: updateMessageDto.category || 0 };
+  //   const msg = await this.messageRepository.preload({
+  //     id,
+  //     ...updateMessageDto,
+  //     category,
+  //   });
+  //   if (!msg) throw new NotFoundException(`Message whit #${id} not found`);
+  //   try {
+  //     await this.messageRepository.save(msg);
+  //     return { message: `This action updates a #${id} message`, data: msg };
+  //   } catch (err) {
+  //     this.handleExceptions(err);
+  //   }
+  // }
 
-  async remove(id: string, user: User) {
-    const message = await this.messageRepository.delete(id);
-    if (!message.affected)
-      throw new NotFoundException(`not found task whit id: ${id}`);
-  }
+  // async remove(id: string, user: User) {
+  //   const message = await this.messageRepository.delete(id);
+  //   if (!message.affected)
+  //     throw new NotFoundException(`not found task whit id: ${id}`);
+  // }
 
-  async addCategory(category: TypeCategory) {
-    try {
-      const newCategory: Category = await this.categoryRepository.create({
-        description: category,
-      });
-      await this.categoryRepository.save(newCategory);
-      return { message: 'category created', newCategory };
-    } catch (err) {
-      this.handleExceptions(err);
-    }
-  }
+  // async addCategory(category: TypeCategory) {
+  //   try {
+  //     const newCategory: Category = await this.categoryRepository.create({
+  //       description: category,
+  //     });
+  //     await this.categoryRepository.save(newCategory);
+  //     return { message: 'category created', newCategory };
+  //   } catch (err) {
+  //     this.handleExceptions(err);
+  //   }
+  // }
 
-  async getCategories() {
-    return this.categoryRepository.find();
-  }
+  // async getCategories() {
+  //   return this.categoryRepository.find();
+  // }
 
   // #region methods
   //TODO: crear un handleExceptions global (serviceName:string, err:any)
-  private handleExceptions(err: any): never {
-    if (err.code === '23505') throw new BadRequestException(err.detail);
+  // private handleExceptions(err: any): never {
+  //   if (err.code === '23505') throw new BadRequestException(err.detail);
 
-    this.logger.error(err);
-    throw new InternalServerErrorException(
-      'Unexpected error, check server logs'
-    );
-  }
+  //   this.logger.error(err);
+  //   throw new InternalServerErrorException(
+  //     'Unexpected error, check server logs'
+  //   );
+  // }
 
   // #endregion methods
 }

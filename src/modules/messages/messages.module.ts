@@ -12,7 +12,7 @@ import { Message } from './entities/message.entity';
   controllers: [MessagesController],
   providers: [MessagesService],
   imports: [
-    AuthModule,
+    // AuthModule,
     TypeOrmModule.forFeature([Message
       // , TypeMessage, Category
     ]),

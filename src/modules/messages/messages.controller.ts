@@ -19,11 +19,11 @@ import { ValidRoles } from '../auth/interfaces/valid-roles';
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
-  @Post()
+  // @Post()
   // @Auth()
-  create(@Body() createMessageDto: CreateMessageDto, @GetUser() user: User) {
-    return this.messagesService.create(createMessageDto, user);
-  }
+  // create(@Body() createMessageDto: CreateMessageDto, @GetUser() user: User) {
+  //   return this.messagesService.create(createMessageDto, user);
+  // }
 
   // @Post('/query')
   // @Auth()
@@ -34,11 +34,11 @@ export class MessagesController {
   //   return this.messagesService.createQuery(createQueryMessageDto, user);
   // }
 
-  @Get()
+  // @Get()
   // @Auth()
-  findAll(@Param() query: PaginationDTO, @GetUser() user: User) {
-    return this.messagesService.findAll(query, user);
-  }
+  // findAll(@Param() query: PaginationDTO, @GetUser() user: User) {
+  //   return this.messagesService.findAll(query, user);
+  // }
 
   // @Get('/find-queries')
   // @Auth()
@@ -52,26 +52,26 @@ export class MessagesController {
   //   return this.messagesService.getTypes();
   // }
 
-  @Get('/get-categories')
-  // @Auth(ValidRoles.user)
-  getAllCategories() {
-    return this.messagesService.getCategories();
-  }
+  // @Get('/get-categories')
+  // // @Auth(ValidRoles.user)
+  // getAllCategories() {
+  //   return this.messagesService.getCategories();
+  // }
 
-  @Get(':id')
+  // @Get(':id')
+  // // @Auth()
+  // findOne(@Param('id') id: string, @GetUser() user: User) {
+  //   return this.messagesService.findOne(+id, user);
+  // }
+
+  // @Patch(':id')
+  // update(@Param('id') id: string, @Body() updateMessageDto: UpdateMessageDto) {
+  //   return this.messagesService.update(+id, updateMessageDto);
+  // }
+
+  // @Delete(':id')
   // @Auth()
-  findOne(@Param('id') id: string, @GetUser() user: User) {
-    return this.messagesService.findOne(+id, user);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateMessageDto: UpdateMessageDto) {
-    return this.messagesService.update(+id, updateMessageDto);
-  }
-
-  @Delete(':id')
-  // @Auth()
-  remove(@Param('id') id: string, @GetUser() user: User) {
-    return this.messagesService.remove(id, user);
-  }
+  // remove(@Param('id') id: string, @GetUser() user: User) {
+  //   return this.messagesService.remove(id, user);
+  // }
 }

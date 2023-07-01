@@ -45,8 +45,8 @@ export class User {
   roles: string[];
 
   // Relations
-  @OneToMany(() => Message, (message) => message.user)
-  message: Message[];
+  // @OneToMany(() => Message, (message) => message.user)
+  // message: Message[];
 
 
   // methods
