@@ -4,7 +4,7 @@ import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
 @Entity('responses')
 export class Response {
   @PrimaryGeneratedColumn('increment')
-  message_id: number;
+  id: number;
 
   @Column('text')
   content: string;

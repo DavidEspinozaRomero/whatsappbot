@@ -12,7 +12,7 @@ import { PaginationDTO } from '../common/dto/pagination.dto';
 import { User } from '../auth/entities/user.entity';
 import { Message } from './entities/message.entity';
 import { CreateMessageDto, UpdateMessageDto } from './dto';
-import { TypeMessage } from './entities/typeMessage.entity';
+// import { TypeMessage } from './entities/typeMessage.entity';
 import { Category, TypeCategory } from './entities/category.entity';
 import { initialData } from '../seed/data/initialData';
 

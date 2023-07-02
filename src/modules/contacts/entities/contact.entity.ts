@@ -4,7 +4,7 @@ import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 @Entity('contacts')
 export class Contact {
   @PrimaryGeneratedColumn('increment')
-  contact_id: number;
+  id: number;
 
   @Column('text', { nullable: true })
   username: string;

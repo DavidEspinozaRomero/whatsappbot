@@ -12,24 +12,25 @@ import { MailerModule } from '@nestjs-modules/mailer';
 // import { MailerCustomService } from './services';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
+import { ContactsModule } from './modules';
 
 @Module({
   imports: [
-    // ConfigModule.forRoot(),
-    // TypeOrmModule.forRoot({
-    //   ssl: process.env.STAGE == 'prod',
-    //   extra: {
-    //     ssl: process.env.STAGE == 'prod' ? { rejectUnauthorized: false } : null,
-    //   },
-    //   type: 'postgres',
-    //   host: process.env.DB_HOST,
-    //   port: +process.env.DB_PORT,
-    //   username: process.env.DB_USERNAME,
-    //   password: process.env.DB_PASSWORD,
-    //   database: process.env.DB_DATABASE,
-    //   autoLoadEntities: true,
-    //   synchronize: true,
-    // }),
+    ConfigModule.forRoot(),
+    TypeOrmModule.forRoot({
+      ssl: process.env.STAGE == 'prod',
+      extra: {
+        ssl: process.env.STAGE == 'prod' ? { rejectUnauthorized: false } : null,
+      },
+      type: 'postgres',
+      host: process.env.DB_HOST,
+      port: +process.env.DB_PORT,
+      username: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_DATABASE,
+      autoLoadEntities: true,
+      synchronize: true,
+    }),
     // MailerModule.forRoot({
     //   transport: {
     //     host: 'smtp.gmail.com',
@@ -59,6 +60,7 @@ import { WebhookModule } from './modules/webhook/webhook.module';
     // BotwsModule,
     // MessagesModule,
     // PaymentsModule,
+    ContactsModule,
     WebhookModule,
   ],
   controllers: [],

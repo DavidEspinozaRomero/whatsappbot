@@ -35,7 +35,7 @@
 
 //     if (!user) throw new Error('user not found');
 //     if (!user.isActive) throw new Error('user not active');
-//     if (!user.isPaid) throw new Error('user not paid');
+//     if (!user.hasPaid) throw new Error('user not paid');
 //     // this.checkUserConnection(user);
 
 //     if (!this.conectedClients[user.id]?.client) {
@@ -56,28 +56,28 @@
 //     clientSocket.emit('message-from-server', payload);
 //   }
 
-//   #createClient(user: User) {
-//     this.conectedClients[user.id].client = new Client({
-//       authStrategy: new LocalAuth({
-//         dataPath: './sessions/',
-//         clientId: user.id,
-//       }),
-//       puppeteer: { headless: true },
-//     });
-//     const { client, socket } = this.conectedClients[user.id];
-//     const payload = {
-//       action: 'creating',
-//       description: 'Creating client and generating QR',
-//     };
-//     socket.emit('message-from-server', payload);
+  // #createClient(user: User) {
+  //   this.conectedClients[user.id].client = new Client({
+  //     authStrategy: new LocalAuth({
+  //       dataPath: './sessions/',
+  //       clientId: user.id,
+  //     }),
+  //     puppeteer: { headless: true },
+  //   });
+  //   const { client, socket } = this.conectedClients[user.id];
+  //   const payload = {
+  //     action: 'creating',
+  //     description: 'Creating client and generating QR',
+  //   };
+  //   socket.emit('message-from-server', payload);
 
-//     this.clientAuthenticated(client);
-//     this.clientReady(client, socket, user);
-//     this.clientQr(client, socket, user.id);
-//     this.clientDisconect(client);
+  //   this.clientAuthenticated(client);
+  //   this.clientReady(client, socket, user);
+  //   this.clientQr(client, socket, user.id);
+  //   this.clientDisconect(client);
 
-//     client.initialize();
-//   }
+  //   client.initialize();
+  // }
 
 //   private clientAuthenticated(client: Client) {
 //     client.on('authenticated', (session) => {

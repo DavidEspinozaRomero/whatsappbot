@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 // import { User } from '../../auth/entities/user.entity';
 // import { Category } from './category.entity';
 import { Contact } from '../../contacts/entities/contact.entity';
@@ -8,7 +15,7 @@ import { Response } from 'src/modules/responses/entities/response.entity';
 export class Message {
   //#region Columns
   @PrimaryGeneratedColumn('increment')
-  message_id: number;
+  id: number;
 
   // @Column('text', { array: true, default: [] })
   // keywords: string[];
@@ -16,15 +23,13 @@ export class Message {
   @Column('text')
   content: string;
 
-  @Column('text')
-  send_at: string;
+  @Column('bool')
+  hasMedia: boolean;
 
-  @ManyToOne(() => Contact, (contact) => contact.message)
-  contact: Contact;
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  send_at: Date;
 
-  @OneToOne(() => Response)
-  @JoinColumn()
-  response: Response;
+
   // @Column('text')
   // startTime: string;
 
@@ -33,18 +38,19 @@ export class Message {
   //#endregion Columns
 
   //#region Relations
+  @ManyToOne(() => Contact, (contact) => contact.message)
+  contact: Contact;
+
+  @OneToOne(() => Response)
+  @JoinColumn()
+  response: Response;
+
   // @ManyToOne(() => User, (user) => user.message)
   // user: User;
 
-  // @ManyToOne(() => TypeMessage, type => type.description)
-  // type: TypeMessage;
-
-  // @ManyToOne(() => Category, (category) => category.description)
-  // category: Category;
-  // contactos
   //#endregion Relations
 
   //#region Methods
   //#endregion Methods
-  //
+  
 }

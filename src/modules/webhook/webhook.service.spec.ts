@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { WebhookService } from './webhook.service';
+import { Client, LocalAuth } from 'whatsapp-web.js';
 
 describe('WebhookService', () => {
   let service: WebhookService;
@@ -14,5 +15,12 @@ describe('WebhookService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('createClient', () => {
+    
+    it('empty', () => {
+      expect(true).toBeTruthy();
+    });
   });
 });
