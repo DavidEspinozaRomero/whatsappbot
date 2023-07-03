@@ -15,38 +15,40 @@ import { CreateMessageDto, UpdateMessageDto } from './dto';
 // import { TypeMessage } from './entities/typeMessage.entity';
 import { Category, TypeCategory } from './entities/category.entity';
 import { initialData } from '../seed/data/initialData';
+import { Contact } from '../contacts/entities/contact.entity';
 
 @Injectable()
 export class MessagesService {
   //#region variables
-  // private readonly logger = new Logger('MessagesService');
+  private readonly logger = new Logger('MessagesService');
   // #defaultMsgs: CreateMessageDto[] = initialData.messages;
 
   //#endregion variables
+
   constructor(
     @InjectRepository(Message)
-    private readonly messageRepository: Repository<Message>,
-    // @InjectRepository(TypeMessage)
-    // private readonly typeMessageRepository: Repository<TypeMessage>,
-    // @InjectRepository(Category)
-    // private readonly categoryRepository: Repository<Category>
+    private readonly messageRepository: Repository<Message>
   ) {}
 
-  // async create(createMessageDto: CreateMessageDto, user: User) {
-  //   try {
-  //     const category = { id: createMessageDto.category };
-  //     const newMessage: Message = this.messageRepository.create({
-  //       ...createMessageDto,
-  //       category,
-  //       user,
-  //     });
-  //     await this.messageRepository.save(newMessage);
-  //     delete newMessage.user;
-  //     return { message: 'mensaje agregado', ...newMessage };
-  //   } catch (err) {
-  //     this.handleExceptions(err);
-  //   }
-  // }
+  async create(
+    createMessageDto: CreateMessageDto,
+    // user: User,
+    contact: Contact
+  ) {
+    try {
+      // const category = { id: createMessageDto.category };
+      const newMessage: Message = this.messageRepository.create({
+        ...createMessageDto,
+        contact,
+        // user,
+      });
+      await this.messageRepository.save(newMessage);
+      // delete newMessage.user;
+      return { message: 'mensaje agregado', ...newMessage };
+    } catch (err) {
+      this.handleExceptions(err);
+    }
+  }
 
   // async default(user: User) {
   //   return this.#defaultMsgs.map(async (msg) => await this.create(msg, user));
@@ -65,7 +67,7 @@ export class MessagesService {
   //     const allmessages = await query.getMany();
   //     const data = allmessages.map((message) => {
   //       console.log(message);
-        
+
   //       const { category, ...dataMessage } = message;
 
   //       return { ...dataMessage, category: category.description };
@@ -126,14 +128,14 @@ export class MessagesService {
 
   // #region methods
   //TODO: crear un handleExceptions global (serviceName:string, err:any)
-  // private handleExceptions(err: any): never {
-  //   if (err.code === '23505') throw new BadRequestException(err.detail);
+  private handleExceptions(err: any): never {
+    if (err.code === '23505') throw new BadRequestException(err.detail);
 
-  //   this.logger.error(err);
-  //   throw new InternalServerErrorException(
-  //     'Unexpected error, check server logs'
-  //   );
-  // }
+    this.logger.error(err);
+    throw new InternalServerErrorException(
+      'Unexpected error, check server logs'
+    );
+  }
 
   // #endregion methods
 }

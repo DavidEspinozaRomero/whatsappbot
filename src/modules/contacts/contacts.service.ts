@@ -25,7 +25,7 @@ export class ContactsService {
       const newContact = this.contactRepository.create(createContactDto);
       await this.contactRepository.save(newContact);
 
-      return { message: 'new contact added' };
+      return newContact;
     } catch (err) {
       this.handleExceptions(err);
     }

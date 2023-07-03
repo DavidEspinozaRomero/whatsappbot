@@ -17,9 +17,6 @@ export class Message {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  // @Column('text', { array: true, default: [] })
-  // keywords: string[];
-
   @Column('text')
   content: string;
 
@@ -29,12 +26,6 @@ export class Message {
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   send_at: Date;
 
-
-  // @Column('text')
-  // startTime: string;
-
-  // @Column('text')
-  // endTime: string;
   //#endregion Columns
 
   //#region Relations

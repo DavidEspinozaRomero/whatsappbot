@@ -12,13 +12,18 @@ import * as qr from 'qr-image';
 import { CreateWebhookDto } from './dto/create-webhook.dto';
 import { UpdateWebhookDto } from './dto/update-webhook.dto';
 import { ContactsService } from '../contacts/contacts.service';
+import { CreateMessageDto, MessagesService } from '../messages';
+import { Contact } from '../contacts/entities/contact.entity';
 
 @Injectable()
 export class WebhookService {
   //#region variables
   private readonly logger = new Logger('ContactsService');
   //#endregion variables
-  constructor(private readonly contactService: ContactsService) {
+  constructor(
+    private readonly contactService: ContactsService,
+    private readonly MessagesService: MessagesService
+  ) {
     this.#conectWhitWhatsAppWeb();
   }
 
@@ -90,27 +95,21 @@ export class WebhookService {
       const { pushname, isBusiness, isEnterprise, isBlocked } = contact;
       const formatedNumber = await contact.getFormattedNumber();
 
-      const contactDB = await this.contactService.findOneByPhone(
-        formatedNumber
+      const contactDB = await this.#checkContact(formatedNumber, pushname);
+
+      this.#saveMessage(
+        {
+          content: body,
+          hasMedia,
+          send_at: new Date(),
+        },
+        contactDB
       );
 
-      if (!contactDB) {
-        await this.contactService.create({
-          cellphone: formatedNumber,
-          created_at: new Date(),
-          last_seen: new Date(),
-          username: pushname,
-        });
-      } else {
-        await this.contactService.updateLastSeen({
-          ...contactDB,
-          last_seen: new Date(),
-        });
-      }
+      // if (hasMedia) await this.#recordMedia(msg);
 
-      // TODO: guardar mensaje en base
-
-      if (hasMedia) await this.#recordMedia(msg);
+      // TODO: diferenciar cuando responder al mensaje
+      // if (!user.hasPaid || chat.isGroup) return;
 
       // await contact.getFormattedNumber() // +593 987 98 98 654
       // await contact.getCountryCode() // 593
@@ -118,14 +117,33 @@ export class WebhookService {
       // const chat:WAWebJS.Chat = await msg.getChat();
 
       // console.log( {from, body, hasMedia} );
-
-      // TODO: diferenciar cuando responder al mensaje
-
-      // if (!user.hasPaid || chat.isGroup) return;
     } catch (err) {
       this.handleExceptions(err);
     }
   }
+  async #checkContact(formatedNumber: string, username: string) {
+    let contact = await this.contactService.findOneByPhone(formatedNumber);
+
+    // check and create contact
+    if (!contact) {
+      contact = await this.contactService.create({
+        cellphone: formatedNumber,
+        created_at: new Date(),
+        last_seen: new Date(),
+        username,
+      });
+    } else {
+      await this.contactService.updateLastSeen({
+        ...contact,
+        last_seen: new Date(),
+      });
+    }
+    return contact;
+  }
+  #saveMessage(data: CreateMessageDto, contact: Contact) {
+    this.MessagesService.create(data, contact);
+  }
+
   async #responseMessage(client: Client, msg: WAWebJS.Message) {
     const { from, to, body, reply, hasMedia } = msg;
 

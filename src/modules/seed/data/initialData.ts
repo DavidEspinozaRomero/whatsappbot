@@ -16,39 +16,39 @@ const Users: CreateUserDto[] = [
 //   { description: TypeCategory.informative },
 // ];
 
-const Messages: CreateMessageDto[] = [
-  {
-    answer: 'hola',
-    keywords: ['Hola! Bienvenido'],
-    category: 2,
-    startTime: '08:00',
-    endTime: '20:00',
-  },
-  {
-    answer: 'precio',
-    keywords: ['el precio es de 5.00$'],
-    category: 1,
-    startTime: '06:00',
-    endTime: '18:00',
-  },
-  {
-    answer: 'como estas',
-    keywords: ['Hola! Todo bien gracias y tu como estas?'],
-    category: 3,
-    startTime: '10:00',
-    endTime: '22:00',
-  },
-  {
-    answer: '',
-    keywords: ['Hola! atendemos de 8Am a 8Pm'],
-    category: 2,
-    startTime: '20:00',
-    endTime: '8:00',
-  },
-];
+// const Messages: CreateMessageDto[] = [
+//   {
+//     answer: 'hola',
+//     keywords: ['Hola! Bienvenido'],
+//     category: 2,
+//     startTime: '08:00',
+//     endTime: '20:00',
+//   },
+//   {
+//     answer: 'precio',
+//     keywords: ['el precio es de 5.00$'],
+//     category: 1,
+//     startTime: '06:00',
+//     endTime: '18:00',
+//   },
+//   {
+//     answer: 'como estas',
+//     keywords: ['Hola! Todo bien gracias y tu como estas?'],
+//     category: 3,
+//     startTime: '10:00',
+//     endTime: '22:00',
+//   },
+//   {
+//     answer: '',
+//     keywords: ['Hola! atendemos de 8Am a 8Pm'],
+//     category: 2,
+//     startTime: '20:00',
+//     endTime: '8:00',
+//   },
+// ];
 
 export const initialData = {
   users: Users,
   // categories: Categories,
-  messages: Messages,
+  // messages: Messages,
 };
