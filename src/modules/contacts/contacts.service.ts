@@ -35,8 +35,13 @@ export class ContactsService {
     return `This action returns all contacts`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} contact`;
+  async findOne(id: number) {
+    try {
+      const contact = await this.contactRepository.findOneBy({id})
+      return contact;
+    } catch (err) {
+      this.handleExceptions(err)
+    }
   }
 
   async findOneByPhone(cellphone: string) {

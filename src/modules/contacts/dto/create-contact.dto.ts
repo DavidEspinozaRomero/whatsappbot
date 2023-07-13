@@ -1,4 +1,4 @@
-import { IsDate, IsString, MinLength } from 'class-validator';
+import { IsBoolean, IsDate, IsString, MinLength } from 'class-validator';
 
 export class CreateContactDto {
   @IsString()
@@ -7,6 +7,9 @@ export class CreateContactDto {
   @IsString()
   @MinLength(10)
   cellphone: string;
+
+  @IsBoolean()
+  isBlocked:boolean;
 
   @IsDate()
   created_at: Date;

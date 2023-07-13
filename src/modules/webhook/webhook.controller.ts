@@ -2,6 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/commo
 import { WebhookService } from './webhook.service';
 import { CreateWebhookDto } from './dto/create-webhook.dto';
 import { UpdateWebhookDto } from './dto/update-webhook.dto';
+import { SendMessageDto, SendMessageToContactDto } from './dto';
 
 @Controller('webhook')
 export class WebhookController {
@@ -10,6 +11,16 @@ export class WebhookController {
   @Post()
   create(@Body() createWebhookDto: CreateWebhookDto) {
     return this.webhookService.create(createWebhookDto);
+  }
+  
+  @Post('send-message')
+  sendMessage(@Body() sendMessageDto:SendMessageDto) {
+    return this.webhookService.sendMessage(sendMessageDto);
+  }
+  
+  @Post('send-message-contact')
+  sendMessageToContact(@Body() sendMessageToContactDto:SendMessageToContactDto) {
+    return this.webhookService.sendMessageToContact(sendMessageToContactDto);
   }
 
   @Get()
@@ -31,4 +42,5 @@ export class WebhookController {
   remove(@Param('id') id: string) {
     return this.webhookService.remove(+id);
   }
+
 }

@@ -8,13 +8,16 @@ export class Contact {
 
   @Column('text', { nullable: true })
   username: string;
-  
+
   @Column('text')
   cellphone: string;
 
+  @Column('bool', { default: false })
+  isBlocked: boolean;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
-  
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   last_seen: Date;
 

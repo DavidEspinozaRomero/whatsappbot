@@ -7,15 +7,17 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Not, Repository } from 'typeorm';
+import {Client, MessageMedia, } from 'whatsapp-web.js';
 
-import { PaginationDTO } from '../common/dto/pagination.dto';
-import { User } from '../auth/entities/user.entity';
+// import { PaginationDTO } from '../common/dto/pagination.dto';
+// import { User } from '../auth/entities/user.entity';
 import { Message } from './entities/message.entity';
 import { CreateMessageDto, UpdateMessageDto } from './dto';
 // import { TypeMessage } from './entities/typeMessage.entity';
-import { Category, TypeCategory } from './entities/category.entity';
-import { initialData } from '../seed/data/initialData';
+// import { Category, TypeCategory } from './entities/category.entity';
+// import { initialData } from '../seed/data/initialData';
 import { Contact } from '../contacts/entities/contact.entity';
+import { isWhatsappNumberPattern } from 'src/utils';
 
 @Injectable()
 export class MessagesService {
@@ -127,6 +129,25 @@ export class MessagesService {
   // }
 
   // #region methods
+  sendMessage(
+    client: Client,
+    cellphone: string,
+    content: string | MessageMedia
+  ) {
+    try {
+      client.sendMessage(this.#chageToWhatsAppNumber(cellphone), content);
+    } catch (err) {
+      this.handleExceptions(err);
+    }
+  }
+  #chageToWhatsAppNumber(cellphone: string) {
+    if (!isWhatsappNumberPattern.test(cellphone)) {
+      cellphone = cellphone.replace(/\D/g, '').concat('@c.us');
+    }
+    return cellphone;
+  }
+
+
   //TODO: crear un handleExceptions global (serviceName:string, err:any)
   private handleExceptions(err: any): never {
     if (err.code === '23505') throw new BadRequestException(err.detail);

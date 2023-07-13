@@ -14,37 +14,39 @@ import { UpdateWebhookDto } from './dto/update-webhook.dto';
 import { ContactsService } from '../contacts/contacts.service';
 import { CreateMessageDto, MessagesService } from '../messages';
 import { Contact } from '../contacts/entities/contact.entity';
+import { SendMessageDto, SendMessageToContactDto } from './dto';
 
 @Injectable()
 export class WebhookService {
   //#region variables
   private readonly logger = new Logger('ContactsService');
+  client!: WAWebJS.Client;
   //#endregion variables
   constructor(
     private readonly contactService: ContactsService,
-    private readonly MessagesService: MessagesService
+    private readonly messagesService: MessagesService
   ) {
     this.#conectWhitWhatsAppWeb();
   }
 
   //#region Whatsapp
   #conectWhitWhatsAppWeb() {
-    const client = this.#createClient();
+    this.client = this.#createClient();
 
     try {
-      client.on('authenticated', (session) => {
+      this.client.on('authenticated', (session) => {
         console.log('authenticated', session);
       });
 
-      client.on('ready', () => {
+      this.client.on('ready', () => {
         console.log('ready!');
       });
 
-      client.on('message', (msg: WAWebJS.Message) => {
+      this.client.on('message', (msg: WAWebJS.Message) => {
         this.onMessage(msg);
       });
 
-      client.on('qr', (qr) => {
+      this.client.on('qr', (qr) => {
         this.#generateImage(qr, 'userId', () => {
           setTimeout(() => {
             this.#deleteFile('qr', `${'userId'}.svg`);
@@ -53,12 +55,12 @@ export class WebhookService {
         // qrcode.generate(qr, { small: true }); // qr terminal
       });
 
-      client.on('disconnected', () => {
-        client.destroy();
+      this.client.on('disconnected', () => {
+        this.client.destroy();
         console.log('Client is disconnected!');
       });
 
-      client.initialize();
+      this.client.initialize();
     } catch (err) {
       this.handleExceptions(err);
     }
@@ -73,7 +75,6 @@ export class WebhookService {
         }),
         puppeteer: { headless: true },
       });
-
       return client;
     } catch (err) {
       this.handleExceptions(err);
@@ -92,10 +93,14 @@ export class WebhookService {
 
     try {
       const contact: WAWebJS.Contact = await msg.getContact();
-      const { pushname, isBusiness, isEnterprise, isBlocked } = contact;
+      const { pushname, isBlocked, isBusiness, isEnterprise } = contact;
       const formatedNumber = await contact.getFormattedNumber();
 
-      const contactDB = await this.#checkContact(formatedNumber, pushname);
+      const contactDB = await this.#checkContact(
+        formatedNumber,
+        pushname,
+        isBlocked
+      );
 
       this.#saveMessage(
         {
@@ -121,27 +126,33 @@ export class WebhookService {
       this.handleExceptions(err);
     }
   }
-  async #checkContact(formatedNumber: string, username: string) {
+  async #checkContact(
+    formatedNumber: string,
+    username: string,
+    isBlocked: boolean
+  ) {
     let contact = await this.contactService.findOneByPhone(formatedNumber);
 
     // check and create contact
     if (!contact) {
       contact = await this.contactService.create({
+        username,
+        isBlocked,
         cellphone: formatedNumber,
         created_at: new Date(),
         last_seen: new Date(),
-        username,
       });
     } else {
       await this.contactService.updateLastSeen({
         ...contact,
+        isBlocked,
         last_seen: new Date(),
       });
     }
     return contact;
   }
   #saveMessage(data: CreateMessageDto, contact: Contact) {
-    this.MessagesService.create(data, contact);
+    this.messagesService.create(data, contact);
   }
 
   async #responseMessage(client: Client, msg: WAWebJS.Message) {
@@ -213,6 +224,18 @@ export class WebhookService {
   #deleteFile(dir: string, pathFile: string) {
     const filePath = `${dir}/${pathFile}`;
     fs.unlinkSync(filePath);
+  }
+
+  sendMessage(sendMessageDto: SendMessageDto) {
+    const { cellphone, content } = sendMessageDto;
+    this.messagesService.sendMessage(this.client, cellphone, content);
+  }
+
+  async sendMessageToContact(sendMessageToContact: SendMessageToContactDto) {
+    const { id, content } = sendMessageToContact;
+    const { cellphone } = await this.contactService.findOne(id);
+
+    this.messagesService.sendMessage(this.client, cellphone, content);
   }
 
   //#endregion Methods
