@@ -47,3 +47,4 @@ package-lock.json
 
 # mine
 session.json
+.wwebjs_cache
