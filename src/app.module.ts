@@ -13,6 +13,8 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { ContactsModule } from './modules';
+import { ErrorsModule } from './modules/errors/errors.module';
+import { AnalyticsModule } from './modules/analytics/analytics.module';
 
 @Module({
   imports: [
@@ -62,6 +64,8 @@ import { ContactsModule } from './modules';
     // PaymentsModule,
     ContactsModule,
     WebhookModule,
+    ErrorsModule,
+    AnalyticsModule,
   ],
   controllers: [],
   // providers: [MailerCustomService],

@@ -49,7 +49,7 @@ export class WebhookService {
       });
 
       this.client.on('message', (msg: WAWebJS.Message) => {
-        this.onMessage(msg);
+        this.handleMessage(msg);
       });
 
       this.client.on('qr', (qr) => {
@@ -95,7 +95,7 @@ export class WebhookService {
   // #storageMedia() {}
 
   // TODO: agregar metodo para diferenciar cuando enviar mensajes
-  async onMessage(msg: WAWebJS.Message) {
+  async handleMessage(msg: WAWebJS.Message) {
     const { from, to, body, hasMedia, fromMe } = msg;
     console.log(msg);
 
@@ -128,7 +128,7 @@ export class WebhookService {
 
       // await contact.getFormattedNumber() // +593 987 98 98 654
       // await contact.getCountryCode() // 593
-      // const info: WAWebJS.MessageInfo = await msg.getInfo();
+      // const info:WAWebJS.MessageInfo = await msg.getInfo();
       // const chat:WAWebJS.Chat = await msg.getChat();
 
       // console.log( {from, body, hasMedia} );
