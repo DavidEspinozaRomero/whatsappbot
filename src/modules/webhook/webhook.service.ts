@@ -27,6 +27,7 @@ export class WebhookService {
     private readonly messagesService: MessagesService
   ) {
     this.#conectWhitWhatsAppWeb();
+    
   }
 
   //#region Whatsapp
@@ -38,8 +39,13 @@ export class WebhookService {
         console.log('authenticated', session);
       });
 
-      this.client.on('ready', () => {
+      this.client.on('ready',async () => {
         console.log('ready!');
+        // await this.client.getContacts()
+        // await this.client.getFormattedNumber(contacts[0].id._serialized)
+      
+      //console.log(await this.client.createGroup(groupName, contacts));
+
       });
 
       this.client.on('message', (msg: WAWebJS.Message) => {
@@ -61,6 +67,7 @@ export class WebhookService {
       });
 
       this.client.initialize();
+      
     } catch (err) {
       this.handleExceptions(err);
     }
@@ -89,16 +96,18 @@ export class WebhookService {
 
   // TODO: agregar metodo para diferenciar cuando enviar mensajes
   async onMessage(msg: WAWebJS.Message) {
-    const { from, to, body, hasMedia } = msg;
+    const { from, to, body, hasMedia, fromMe } = msg;
+    console.log(msg);
 
     try {
       const contact: WAWebJS.Contact = await msg.getContact();
-      const { pushname, isBlocked, isBusiness, isEnterprise } = contact;
+      const { verifiedName, pushname, isBlocked, isBusiness, isEnterprise } = contact;
       const formatedNumber = await contact.getFormattedNumber();
-
+      // console.log(contact);
+      
       const contactDB = await this.#checkContact(
         formatedNumber,
-        pushname,
+        verifiedName ?? pushname,
         isBlocked
       );
 
@@ -106,6 +115,7 @@ export class WebhookService {
         {
           content: body,
           hasMedia,
+          fromMe,
           send_at: new Date(),
         },
         contactDB

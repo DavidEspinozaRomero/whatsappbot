@@ -6,6 +6,9 @@ export class CreateMessageDto {
 
   @IsBoolean()
   hasMedia: boolean;
+  
+  @IsBoolean()
+  fromMe: boolean;
 
   @IsDate()
   send_at: Date;
