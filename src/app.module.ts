@@ -15,6 +15,7 @@ import { WebhookModule } from './modules/webhook/webhook.module';
 import { ContactsModule } from './modules';
 import { ErrorsModule } from './modules/errors/errors.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
+import { FilesModule } from './modules/files/files.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { AnalyticsModule } from './modules/analytics/analytics.module';
     WebhookModule,
     ErrorsModule,
     AnalyticsModule,
+    FilesModule,
   ],
   controllers: [],
   // providers: [MailerCustomService],
