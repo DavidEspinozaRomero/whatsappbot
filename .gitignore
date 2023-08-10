@@ -44,6 +44,7 @@ lerna-debug.log*
 # heroku
 yarn.lock
 package-lock.json
+pnpm-lock.yaml
 
 # mine
 session.json

@@ -104,7 +104,7 @@ export class WebhookService {
       const { verifiedName, pushname, isBlocked, isBusiness, isEnterprise } = contact;
       const formatedNumber = await contact.getFormattedNumber();
       // console.log(contact);
-      
+      // TODO: agregar un campo para el numero de whatsapp y luego borrar el campo cellphone
       const contactDB = await this.#checkContact(
         formatedNumber,
         verifiedName ?? pushname,
