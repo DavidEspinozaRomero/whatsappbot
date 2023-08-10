@@ -4,8 +4,8 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common/exceptions';
 
-import WAWebJS, { Client, LocalAuth } from 'whatsapp-web.js';
-import * as qrcode from 'qrcode-terminal';
+import WAWebJS, { Client, LocalAuth, MessageTypes } from 'whatsapp-web.js';
+// import * as qrcode from 'qrcode-terminal';
 import * as fs from 'fs';
 import * as qr from 'qr-image';
 
@@ -15,6 +15,7 @@ import { ContactsService } from '../contacts/contacts.service';
 import { CreateMessageDto, MessagesService } from '../messages';
 import { Contact } from '../contacts/entities/contact.entity';
 import { SendMessageDto, SendMessageToContactDto } from './dto';
+import { repl } from '@nestjs/core';
 
 @Injectable()
 export class WebhookService {
@@ -27,7 +28,6 @@ export class WebhookService {
     private readonly messagesService: MessagesService
   ) {
     this.#conectWhitWhatsAppWeb();
-    
   }
 
   //#region Whatsapp
@@ -39,13 +39,12 @@ export class WebhookService {
         console.log('authenticated', session);
       });
 
-      this.client.on('ready',async () => {
+      this.client.on('ready', async () => {
         console.log('ready!');
         // await this.client.getContacts()
         // await this.client.getFormattedNumber(contacts[0].id._serialized)
-      
-      //console.log(await this.client.createGroup(groupName, contacts));
 
+        //console.log(await this.client.createGroup(groupName, contacts));
       });
 
       this.client.on('message', (msg: WAWebJS.Message) => {
@@ -67,7 +66,6 @@ export class WebhookService {
       });
 
       this.client.initialize();
-      
     } catch (err) {
       this.handleExceptions(err);
     }
@@ -96,78 +94,89 @@ export class WebhookService {
 
   // TODO: agregar metodo para diferenciar cuando enviar mensajes
   async handleMessage(msg: WAWebJS.Message) {
-    const { from, to, body, hasMedia, fromMe } = msg;
-    console.log(msg);
+    const { from, to, body, hasMedia, fromMe, deviceType, type } = msg;
 
     try {
       const contact: WAWebJS.Contact = await msg.getContact();
-      const { verifiedName, pushname, isBlocked, isBusiness, isEnterprise } = contact;
-      const formatedNumber = await contact.getFormattedNumber();
-      // console.log(contact);
-      // TODO: agregar un campo para el numero de whatsapp y luego borrar el campo cellphone
+      const {
+        verifiedName,
+        pushname,
+        isBlocked,
+        isBusiness,
+        isEnterprise,
+      } = contact;
+
+      // save/update contact
       const contactDB = await this.#checkContact(
-        formatedNumber,
+        from,
         verifiedName ?? pushname,
-        isBlocked
+        isBlocked,
+        isBusiness,
+        isEnterprise
       );
 
+      //save messages in DB
       this.#saveMessage(
         {
           content: body,
           hasMedia,
           fromMe,
+          deviceType,
+          type,
           send_at: new Date(),
         },
         contactDB
       );
 
+      // ignore contact
+      if (contactDB.isBlocked) return;
+
+      if (body === 'AGENTE') {
+        const group = await this.#createGroupWhit('Soporte Técnico', contact)
+
+        const actualgroup = await this.client.getCommonGroups(group.gid)[0];
+        const actualChatGroup = await this.client.getChatById(actualgroup)
+        // actualChatGroup.
+      }
       // if (hasMedia) await this.#recordMedia(msg);
 
       // TODO: diferenciar cuando responder al mensaje
+      const chat: WAWebJS.Chat = await msg.getChat();
       // if (!user.hasPaid || chat.isGroup) return;
-
-      // await contact.getFormattedNumber() // +593 987 98 98 654
-      // await contact.getCountryCode() // 593
+      if (chat.isGroup) return;
+      
       // const info:WAWebJS.MessageInfo = await msg.getInfo();
-      // const chat:WAWebJS.Chat = await msg.getChat();
 
       // console.log( {from, body, hasMedia} );
     } catch (err) {
       this.handleExceptions(err);
     }
   }
-  async #checkContact(
-    formatedNumber: string,
+  #checkContact(
+    WACellphone: string,
     username: string,
-    isBlocked: boolean
+    isBlocked: boolean,
+    isBusiness: boolean,
+    isEnterprise: boolean
   ) {
-    let contact = await this.contactService.findOneByPhone(formatedNumber);
-
-    // check and create contact
-    if (!contact) {
-      contact = await this.contactService.create({
-        username,
-        isBlocked,
-        cellphone: formatedNumber,
-        created_at: new Date(),
-        last_seen: new Date(),
-      });
-    } else {
-      await this.contactService.updateLastSeen({
-        ...contact,
-        isBlocked,
-        last_seen: new Date(),
-      });
-    }
-    return contact;
+    return this.contactService.checkContact(
+      WACellphone,
+      username,
+      isBlocked,
+      isBusiness,
+      isEnterprise
+    );
   }
   #saveMessage(data: CreateMessageDto, contact: Contact) {
     this.messagesService.create(data, contact);
   }
 
+  async #createGroupWhit(groupName: string, contact: WAWebJS.Contact) {
+    return await this.client.createGroup(groupName, [contact]);
+  }
+
   async #responseMessage(client: Client, msg: WAWebJS.Message) {
     const { from, to, body, reply, hasMedia } = msg;
-
     // let { data } = await this.getDBQuestionAnswer(user);
 
     // const now: string = new Date().toTimeString().split(' ')[0];

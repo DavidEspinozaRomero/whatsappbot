@@ -15,6 +15,15 @@ export class Contact {
   @Column('bool', { default: false })
   isBlocked: boolean;
 
+  @Column('bool', { default: false })
+  isBusiness: boolean;
+
+  @Column('bool', { default: false })
+  isEnterprise: boolean;
+
+  @Column('bool', { default: false })
+  isGroup: boolean;
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   created_at: Date;
 

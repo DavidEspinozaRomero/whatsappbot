@@ -37,10 +37,10 @@ export class ContactsService {
 
   async findOne(id: number) {
     try {
-      const contact = await this.contactRepository.findOneBy({id})
+      const contact = await this.contactRepository.findOneBy({ id });
       return contact;
     } catch (err) {
-      this.handleExceptions(err)
+      this.handleExceptions(err);
     }
   }
 
@@ -54,20 +54,51 @@ export class ContactsService {
   }
 
   async updateLastSeen(contact: Contact) {
-    const lastSeenUpdated = await this.contactRepository.preload({
+    const updatedContact = await this.contactRepository.preload({
       ...contact,
       last_seen: new Date(),
     });
 
     try {
-      await this.contactRepository.save(lastSeenUpdated);
-      return true;
+      await this.contactRepository.save(updatedContact);
+      return updatedContact;
     } catch (err) {
       this.handleExceptions(err);
     }
   }
   async update(id: number, updateContactDto: UpdateContactDto) {
     return `This action updates a #${id} contact`;
+  }
+  async checkContact(
+    WACellphone: string,
+    username: string,
+    isBlocked: boolean,
+    isBusiness: boolean,
+    isEnterprise: boolean
+  ) {
+    let contact = await this.findOneByPhone(WACellphone);
+
+    // check and create contact
+    if (!contact) {
+      contact = await this.create({
+        cellphone: WACellphone,
+        created_at: new Date(),
+        last_seen: new Date(),
+        username,
+        isBlocked,
+        isBusiness,
+        isEnterprise,
+      });
+    } else {
+      contact = await this.updateLastSeen({
+        ...contact,
+        isBlocked,
+        isBusiness,
+        isEnterprise,
+        last_seen: new Date(),
+      });
+    }
+    return contact;
   }
 
   remove(id: number) {

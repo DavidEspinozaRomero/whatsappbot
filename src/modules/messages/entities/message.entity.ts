@@ -10,6 +10,7 @@ import {
 // import { Category } from './category.entity';
 import { Contact } from '../../contacts/entities/contact.entity';
 import { Response } from 'src/modules/responses/entities/response.entity';
+import { MessageTypes } from 'whatsapp-web.js';
 
 @Entity('messages')
 export class Message {
@@ -20,8 +21,16 @@ export class Message {
   @Column('text')
   content: string;
 
+  @Column('bool', { default: false })
+  fromMe: boolean;
   @Column('bool')
   hasMedia: boolean;
+
+  @Column('text', { default: 'n/a' })
+  deviceType: string;
+
+  @Column('text', { default: 'n/a' })
+  type: string;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   send_at: Date;
@@ -43,5 +52,4 @@ export class Message {
 
   //#region Methods
   //#endregion Methods
-  
 }

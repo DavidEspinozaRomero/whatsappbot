@@ -9,7 +9,13 @@ export class CreateContactDto {
   cellphone: string;
 
   @IsBoolean()
-  isBlocked:boolean;
+  isBlocked: boolean;
+  
+  @IsBoolean()
+  isBusiness: boolean;
+  
+  @IsBoolean()
+  isEnterprise: boolean;
 
   @IsDate()
   created_at: Date;
