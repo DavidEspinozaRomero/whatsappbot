@@ -3,12 +3,8 @@ import {
   BeforeUpdate,
   Column,
   Entity,
-  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-
-import { Message } from '../../messages/entities/message.entity';
-import { Media } from 'src/modules/media/entities/media.entity';
 
 @Entity('users')
 export class User {
@@ -35,10 +31,10 @@ export class User {
 
   @Column('bool', { default: true })
   isActive: boolean;
-  
+
   @Column('bool', { default: false })
   isEmail: boolean;
-  
+
   @Column('bool', { default: false })
   hasPaid: boolean;
 
@@ -46,11 +42,18 @@ export class User {
   roles: string[];
 
   // Relations
+
   // @OneToMany(() => Message, (message) => message.user)
   // message: Message[];
+
   // @OneToMany(() => Media, (media) => media.uploadedBy)
   // media: Media[];
 
+  // @OneToMany(
+  //   () => PredefinedResponse,
+  //   (predefinedResponse) => predefinedResponse.createdBy
+  // )
+  // predefinedResponse: PredefinedResponse[];
 
   // methods
 
