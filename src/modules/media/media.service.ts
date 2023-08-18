@@ -41,6 +41,7 @@ export class MediaService {
         mediaType,
         mediaURL,
       });
+      await this.mediaRepository.save(newMedia);
       return newMedia;
     } catch (err) {
       console.log(err);

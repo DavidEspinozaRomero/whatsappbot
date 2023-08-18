@@ -1,8 +1,12 @@
+import { Media } from 'src/modules/media/entities/media.entity';
+import { Message } from 'src/modules/messages';
+import { PredefinedResponse } from 'src/modules/responses/entities';
 import {
   BeforeInsert,
   BeforeUpdate,
   Column,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 

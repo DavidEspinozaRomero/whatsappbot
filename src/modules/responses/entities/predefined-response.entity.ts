@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from 'src/modules/auth/entities/user.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('predefined_responses')
 export class PredefinedResponse {
@@ -21,9 +22,9 @@ export class PredefinedResponse {
 
   // Realtions
 
-  //  (User ID who created the response)
+  
   // @ManyToOne(() => User, (user) => user.predefinedResponse)
-  // createdBy: User;
+  // createdBy: User; //  (User ID who created the response)
 
   // @OneToOne(() => Message, (message) => message.response)
   // message: Message;

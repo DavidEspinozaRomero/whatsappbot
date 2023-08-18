@@ -6,11 +6,11 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-// import { User } from '../../auth/entities/user.entity';
-// import { Category } from './category.entity';
+
 import { Contact } from '../../contacts/entities/contact.entity';
-import { Response } from 'src/modules/responses/entities/response.entity';
-import { MessageTypes } from 'whatsapp-web.js';
+import { Response } from '../../responses/entities/response.entity';
+import { User } from '../../auth/entities/user.entity';
+
 
 @Entity('messages')
 export class Message {

@@ -1,4 +1,5 @@
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from 'src/modules/auth/entities/user.entity';
 
 export class Media {
   @PrimaryGeneratedColumn('increment')
@@ -25,7 +26,7 @@ export class Media {
   // #region relations
 
   // @ManyToOne( () => User, (user) => user.media)
-  // uploadedBy: User; (User ID)
+  // uploadedBy: User; //(User ID)
 
   // #endregion relations
 }
