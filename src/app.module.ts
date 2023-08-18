@@ -16,6 +16,8 @@ import { ContactsModule } from './modules';
 import { ErrorsModule } from './modules/errors/errors.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { FilesModule } from './modules/files/files.module';
+import { MediaModule } from './modules/media/media.module';
+import { GroupsModule } from './modules/groups/groups.module';
 
 @Module({
   imports: [
@@ -68,6 +70,8 @@ import { FilesModule } from './modules/files/files.module';
     ErrorsModule,
     AnalyticsModule,
     FilesModule,
+    MediaModule,
+    GroupsModule,
   ],
   controllers: [],
   // providers: [MailerCustomService],
