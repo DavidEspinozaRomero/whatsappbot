@@ -1,4 +1,10 @@
-import { IsArray, IsDate, IsString, MinLength } from 'class-validator';
+import {
+  IsArray,
+  IsDate,
+  IsOptional,
+  IsString,
+  MinLength,
+} from 'class-validator';
 
 export class CreatePredefinedResponseDto {
   @IsArray()
@@ -6,12 +12,14 @@ export class CreatePredefinedResponseDto {
   content: string[];
 
   @IsString()
-  responseType: string; // (e.g., FAQs, atention hours, services)
+  responseType: string; // (e.g., FAQs, atention hours, services, welcome)
 
   @IsDate()
+  @IsOptional()
   createdAt: Date;
 
   @IsDate()
+  @IsOptional()
   updatedAt: Date;
 
   // @IsString()

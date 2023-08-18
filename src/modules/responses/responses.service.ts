@@ -1,26 +1,110 @@
 import { Injectable } from '@nestjs/common';
-import { CreateResponseDto } from './dto/create-response.dto';
-import { UpdateResponseDto } from './dto/update-response.dto';
+import {
+  CreatePredefinedResponseDto,
+  UpdatePredefinedResponseDto,
+} from './dto';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PredefinedResponse } from './entities';
 
 @Injectable()
 export class ResponsesService {
-  create(createResponseDto: CreateResponseDto) {
-    return 'This action adds a new response';
+  constructor(
+    @InjectRepository(PredefinedResponse)
+    private readonly predefinedResponseRepository: Repository<PredefinedResponse>
+  ) {}
+  // region variables
+  // endregion variables
+
+  // region methods
+  async createPredefinedResponse(
+    createPredefinedResponseDto: CreatePredefinedResponseDto
+  ) {
+    const { content, responseType } = createPredefinedResponseDto;
+    try {
+      const newPredefinedResponse = this.predefinedResponseRepository.create({
+        content,
+        responseType,
+      });
+      await this.predefinedResponseRepository.save(newPredefinedResponse);
+      return newPredefinedResponse;
+    } catch (err) {
+      console.log(err);
+    }
   }
 
-  findAll() {
-    return `This action returns all responses`;
+  async findAllPredefinedResponse() {
+    // TODO: by user
+    try {
+      const predefinedResponses =
+        await this.predefinedResponseRepository.find();
+      return predefinedResponses;
+    } catch (err) {
+      console.log(err);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} response`;
+  async findOnePredefinedResponse(id: number) {
+    try {
+      const predefinedResponse =
+        await this.predefinedResponseRepository.findOneBy({
+          id,
+        });
+      return predefinedResponse;
+    } catch (err) {
+      console.log(err);
+    }
   }
 
-  update(id: number, updateResponseDto: UpdateResponseDto) {
-    return `This action updates a #${id} response`;
+  async updatePredefinedResponse(
+    id: number,
+    updatePredefinedResponseDto: UpdatePredefinedResponseDto
+  ) {
+    const { content, responseType } = updatePredefinedResponseDto;
+    const predefinedResponse = await this.findOnePredefinedResponse(id);
+    try {
+      const newPredefinedResponse =
+        await this.predefinedResponseRepository.preload({
+          ...predefinedResponse,
+          content,
+          responseType,
+          updatedAt: new Date(),
+        });
+      await this.predefinedResponseRepository.save(newPredefinedResponse);
+      return newPredefinedResponse;
+    } catch (err) {
+      console.log(err);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} response`;
+  async removePredefinedResponse(id: number) {
+    try {
+      const { affected } = await this.predefinedResponseRepository.delete(id);
+      if (affected) return `predefined response whit id:${id} removed`;
+      return `predefined response whit id:${id} not found`;
+    } catch (err) {
+      console.log(err);
+    }
   }
+
+  // create(createResponseDto: CreateResponseDto) {
+  //   return 'This action adds a new response';
+  // }
+
+  // findAll() {
+  //   return `This action returns all responses`;
+  // }
+
+  // findOne(id: number) {
+  //   return `This action returns a #${id} response`;
+  // }
+
+  // update(id: number, updateResponseDto: UpdateResponseDto) {
+  //   return `This action updates a #${id} response`;
+  // }
+
+  // remove(id: number) {
+  //   return `This action removes a #${id} response`;
+  // }
+  // endregion methods
 }

@@ -1,5 +1,5 @@
-import { User } from 'src/modules/auth/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+// import { User } from 'src/modules/auth/entities/user.entity';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('predefined_responses')
 export class PredefinedResponse {

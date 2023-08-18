@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateResponseDto } from './create-response.dto';
+import { CreatePredefinedResponseDto } from './create-predefined-response.dto';
 
 export class UpdatePredefinedResponseDto extends PartialType(
-  CreateResponseDto
+  CreatePredefinedResponseDto
 ) {}
