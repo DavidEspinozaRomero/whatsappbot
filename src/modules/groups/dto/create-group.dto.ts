@@ -1,6 +1,5 @@
 import {
   IsArray,
-  IsDate,
   IsNumber,
   IsString,
   MinLength,
@@ -19,7 +18,4 @@ export class CreateGroupDto {
 
   @IsString()
   description: string;
-
-  @IsDate()
-  createdAt: Date;
 }

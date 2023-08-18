@@ -4,15 +4,6 @@ export class GroupManagement {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column('text')
-  groupName: string;
-
-  @Column('int', { array: true })
-  groupMembers: number[]; // (Array of Contacts IDs)
-
-  @Column('text')
-  description: string;
-
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   joinedAt: Date;
 
@@ -22,7 +13,7 @@ export class GroupManagement {
   @Column('text')
   role: string; // (e.g., admin, moderator)
 
-  @Column('text')
+  @Column('text', { default: 'active' })
   status: string; // (e.g., active, inactive)
 
   @Column('text')
