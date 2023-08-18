@@ -5,33 +5,27 @@ export class Media {
   id: number;
 
   @Column('text')
-  mediaType: string;
-
-  @Column('text')
-  mediaURL: string;
-
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  uploadedAt: Date;
-
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  updatedAt: Date;
+  mediaURL: string; // (link to the media file)
 
   @Column('text')
   description: string;
 
-  // @Column('bool')
+  @Column('text')
+  mediaType: string; // (e.g., image, audio, video)
+
+  // @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  // uploadedAt: Date;
+
+  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  lastUpdate: Date;
+
+  // tags // (Array of descriptive tags)
   // isPublic: boolean;
 
   // #region relations
-  // @ManyToOne( () => User, (user) => user.media)
-  // uploadedBy: User;
-  // #endregion relations
 
-  // mediaType (e.g., image, audio, video)
-  // mediaURL (link to the media file)
-  // uploadedBy (User ID)
-  // uploadedAt
-  // description
-  // isPublic (Boolean)
-  // tags (Array of descriptive tags)
+  // @ManyToOne( () => User, (user) => user.media)
+  // uploadedBy: User; (User ID)
+
+  // #endregion relations
 }

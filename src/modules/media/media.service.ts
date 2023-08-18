@@ -1,10 +1,9 @@
 import { Injectable } from '@nestjs/common';
-// import { CreateMediaDto } from './dto/create-media.dto';
-// import { UpdateMediaDto } from './dto/update-media.dto';
+import { CreateMediaDto, UpdateMediaDto } from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Media } from './entities/media.entity';
 import { Repository } from 'typeorm';
-import { User } from '../auth/entities/user.entity';
+// import { User } from '../auth/entities/user.entity';
 
 @Injectable()
 export class MediaService {
@@ -16,6 +15,46 @@ export class MediaService {
     private readonly mediaRepository: Repository<Media>
   ) {}
   //#region methods
+
+  async create(createMediaDto: CreateMediaDto) {
+    const { description, mediaType, mediaURL } = createMediaDto;
+    try {
+      const newMedia = this.mediaRepository.create({
+        description,
+        mediaType,
+        mediaURL,
+      });
+      await this.mediaRepository.save(newMedia);
+      return newMedia;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  async update(id: number, updateMediaDto: UpdateMediaDto) {
+    const { description, mediaType, mediaURL } = updateMediaDto;
+    try {
+      const media = await this.findOne(id);
+      const newMedia = await this.mediaRepository.preload({
+        ...media,
+        description,
+        mediaType,
+        mediaURL,
+      });
+      return newMedia;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  async findOne(id: number) {
+    // TODO: agregar filtro de user
+    try {
+      const media = await this.mediaRepository.findOneBy({ id });
+      return media;
+    } catch (err) {
+      console.log(err);
+    }
+  }
   // async findAll(user: User) {
   //   const {id} = user
   //   // TODO: agregar filtro de user
@@ -26,12 +65,11 @@ export class MediaService {
   //     console.log(err);
   //   }
   // }
-
-  async findOne(id: number) {
-    // TODO: agregar filtro de user
+  async remove(id: number) {
     try {
-      const media = await this.mediaRepository.findOneBy({ id });
-      return media;
+      const { affected } = await this.mediaRepository.delete(id);
+      if (affected) return `Media whit id:${id} deleted`;
+      return `Media whit id:${id} not found`;
     } catch (err) {
       console.log(err);
     }
@@ -39,15 +77,4 @@ export class MediaService {
   //#endregion methods
   //#region
   //#endregion
-  // create(createMediaDto: CreateMediaDto) {
-  //   return 'This action adds a new media';
-  // }
-
-  // update(id: number, updateMediaDto: UpdateMediaDto) {
-  //   return `This action updates a #${id} media`;
-  // }
-
-  // remove(id: number) {
-  //   return `This action removes a #${id} media`;
-  // }
 }

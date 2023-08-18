@@ -1,4 +1,4 @@
-import { IsDate, IsString, MinLength } from 'class-validator';
+import { IsDate, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateMediaDto {
   @IsString()
@@ -9,12 +9,14 @@ export class CreateMediaDto {
   @MinLength(1)
   mediaURL: string;
 
-  @IsDate()
-  uploadedAt: Date;
+  // @IsDate()
+  // uploadedAt: Date;
 
   @IsDate()
-  updatedAt: Date;
+  @IsOptional()
+  lastUpdate: Date;
 
   @IsString()
+  @MinLength(1)
   description: string;
 }
