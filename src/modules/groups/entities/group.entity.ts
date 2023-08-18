@@ -1,4 +1,3 @@
-import { Contact } from 'src/modules/contacts/entities/contact.entity';
 import { Column } from 'typeorm';
 
 export class Group {
@@ -10,7 +9,7 @@ export class Group {
   groupName: string;
 
   @Column('int', { array: true })
-  groupMembers: Contact[]; // (Array of Contacts IDs)
+  groupMembers: number[]; // (Array of Contacts IDs)
 
   @Column('text')
   description: string;

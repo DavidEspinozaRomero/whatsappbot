@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsDate, IsString } from 'class-validator';
 
 export class CreateGroupManagementDto {
   @IsString()
@@ -9,4 +9,7 @@ export class CreateGroupManagementDto {
 
   @IsString()
   permissions: string;
+
+  @IsDate()
+  lastSeen: Date;
 }

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
   CreateGroupDto,
-  UpdateGroupDto,
   CreateGroupManagementDto,
+  UpdateGroupManagementDto,
 } from './dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Group, GroupManagement } from './entities';
@@ -41,6 +41,7 @@ export class GroupsService {
         role,
         status,
         permissions,
+        lastSeen: new Date(),
       });
 
       await this.groupManagementRepository.save(newGroupManagement);
@@ -50,19 +51,51 @@ export class GroupsService {
     }
   }
 
-  findAll() {
+  findAllGroups() {
+    // TODO: by user
     return `This action returns all groups`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} group`;
+  async findOneGroup(id: number) {
+    try {
+      const group = await this.groupRepository.findBy({ id });
+      return group;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  async findOneGroupManagement(id: number) {
+    try {
+      const group = await this.groupManagementRepository.findBy({ id });
+      return group;
+    } catch (err) {
+      console.log(err);
+    }
   }
 
-  update(id: number, updateGroupDto: UpdateGroupDto) {
-    return `This action updates a #${id} group`;
+  async updateGroupManagement(
+    id: number,
+    updateGroupManagementDto: UpdateGroupManagementDto
+  ) {
+    const { status } = updateGroupManagementDto;
+    const groupManagement = this.groupManagementRepository.findOneBy({ id });
+    try {
+      const newGroupManagement = await this.groupManagementRepository.preload({
+        ...groupManagement,
+        lastSeen: new Date(),
+        status,
+      });
+      await this.groupManagementRepository.save(newGroupManagement);
+      return newGroupManagement;
+    } catch (err) {
+      console.log(err);
+    }
   }
+  // update(id: number, updateGroupDto: UpdateGroupDto) {
+  //   return `This action updates a #${id} group`;
+  // }
 
-  remove(id: number) {
-    return `This action removes a #${id} group`;
-  }
+  // remove(id: number) {
+  //   return `This action removes a #${id} group`;
+  // }
 }
