@@ -19,8 +19,8 @@ export class Media {
   @Column('text')
   description: string;
 
-  @Column('bool')
-  isPublic: boolean;
+  // @Column('bool')
+  // isPublic: boolean;
 
   // #region relations
   // @ManyToOne( () => User, (user) => user.media)
