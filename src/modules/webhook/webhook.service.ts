@@ -15,7 +15,6 @@ import { ContactsService } from '../contacts/contacts.service';
 import { CreateMessageDto, MessagesService } from '../messages';
 import { Contact } from '../contacts/entities/contact.entity';
 import { SendMessageDto, SendMessageToContactDto } from './dto';
-import { repl } from '@nestjs/core';
 
 @Injectable()
 export class WebhookService {
@@ -23,6 +22,7 @@ export class WebhookService {
   private readonly logger = new Logger('ContactsService');
   client!: WAWebJS.Client;
   //#endregion variables
+
   constructor(
     private readonly contactService: ContactsService,
     private readonly messagesService: MessagesService
@@ -98,13 +98,8 @@ export class WebhookService {
 
     try {
       const contact: WAWebJS.Contact = await msg.getContact();
-      const {
-        verifiedName,
-        pushname,
-        isBlocked,
-        isBusiness,
-        isEnterprise,
-      } = contact;
+      const { verifiedName, pushname, isBlocked, isBusiness, isEnterprise } =
+        contact;
 
       // save/update contact
       const contactDB = await this.#checkContact(
@@ -132,10 +127,10 @@ export class WebhookService {
       if (contactDB.isBlocked) return;
 
       if (body === 'AGENTE') {
-        const group = await this.#createGroupWhit('Soporte Técnico', contact)
+        const group = await this.#createGroupWhit('Soporte Técnico', contact);
 
         const actualgroup = await this.client.getCommonGroups(group.gid)[0];
-        const actualChatGroup = await this.client.getChatById(actualgroup)
+        const actualChatGroup = await this.client.getChatById(actualgroup);
         // actualChatGroup.
       }
       // if (hasMedia) await this.#recordMedia(msg);
@@ -144,7 +139,7 @@ export class WebhookService {
       const chat: WAWebJS.Chat = await msg.getChat();
       // if (!user.hasPaid || chat.isGroup) return;
       if (chat.isGroup) return;
-      
+
       // const info:WAWebJS.MessageInfo = await msg.getInfo();
 
       // console.log( {from, body, hasMedia} );

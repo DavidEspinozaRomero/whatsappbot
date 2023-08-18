@@ -9,9 +9,6 @@ export class PredefinedResponse {
   content: string[];
 
   @Column('text')
-  sendAt: string;
-
-  @Column('text')
   responseType: string; // (e.g., FAQs, atention hours, services)
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
@@ -37,4 +34,8 @@ export class PredefinedResponse {
   //   { nullable: true }
   // )
   // predefinedResponseId: number;
+
+  // @ManyToOne(() => User, (user) => user.predefinedResponse)
+  // sendTo: Contact;
+
 }
