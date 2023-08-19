@@ -1,15 +1,15 @@
 import {
   Column,
   Entity,
-  JoinColumn,
+  // JoinColumn,
   ManyToOne,
-  OneToOne,
+  // OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
 import { Contact } from '../../contacts/entities/contact.entity';
-import { Response } from '../../responses/entities/response.entity';
-import { User } from '../../auth/entities/user.entity';
+// import { Response } from '../../responses/entities/response.entity';
+// import { User } from '../../auth/entities/user.entity';
 
 
 @Entity('messages')
@@ -41,9 +41,9 @@ export class Message {
   @ManyToOne(() => Contact, (contact) => contact.message)
   contact: Contact;
 
-  @OneToOne(() => Response)
-  @JoinColumn()
-  response: Response;
+  // @OneToOne(() => Response)
+  // @JoinColumn()
+  // response: Response;
 
   // @ManyToOne(() => User, (user) => user.message)
   // user: User;

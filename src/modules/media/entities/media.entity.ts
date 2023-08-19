@@ -1,6 +1,7 @@
-import { Column, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from 'src/modules/auth/entities/user.entity';
 
+@Entity('media')
 export class Media {
   @PrimaryGeneratedColumn('increment')
   id: number;

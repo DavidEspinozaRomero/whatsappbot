@@ -1,12 +1,13 @@
 import { Module } from '@nestjs/common';
-import { ResponsesService } from './responses.service';
-import { ResponsesController } from './responses.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { PredefinedResponse, Response } from './entities';
+
+import { ResponsesController } from './responses.controller';
+import { ResponsesService } from './responses.service';
+import { PredefinedResponse } from './entities';
 
 @Module({
   controllers: [ResponsesController],
-  imports: [TypeOrmModule.forFeature([Response, PredefinedResponse])],
+  imports: [TypeOrmModule.forFeature([PredefinedResponse])],
   providers: [ResponsesService],
   exports: [TypeOrmModule],
 })

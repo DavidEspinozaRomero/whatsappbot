@@ -1,5 +1,6 @@
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+@Entity('group_management')
 export class GroupManagement {
   @PrimaryGeneratedColumn('increment')
   id: number;

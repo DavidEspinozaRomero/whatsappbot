@@ -1,5 +1,5 @@
-import { Message } from 'src/modules/messages';
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+// import { Message } from 'src/modules/messages';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('responses')
 export class Response {
@@ -12,6 +12,6 @@ export class Response {
   @Column('text')
   send_at: string;
 
-  @OneToOne(() => Message, (message) => message.response)
-  message: Message;
+  // @OneToOne(() => Message, (message) => message.response)
+  // message: Message;
 }

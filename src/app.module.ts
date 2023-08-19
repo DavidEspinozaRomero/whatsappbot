@@ -12,7 +12,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 // import { MailerCustomService } from './services';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
-import { ContactsModule } from './modules';
+import { AuthModule, ContactsModule } from './modules';
 import { ErrorsModule } from './modules/errors/errors.module';
 import { AnalyticsModule } from './modules/analytics/analytics.module';
 import { FilesModule } from './modules/files/files.module';
@@ -58,13 +58,13 @@ import { GroupsModule } from './modules/groups/groups.module';
     //   //   },
     //   // },
     // }),
-    // AuthModule,
-    // SeedModule,
-    // CommonModule,
     // BotWebwhatsapModule,
     // BotwsModule,
-    // MessagesModule,
     // PaymentsModule,
+    AuthModule,
+    SeedModule,
+    CommonModule,
+    MessagesModule,
     ContactsModule,
     WebhookModule,
     ErrorsModule,

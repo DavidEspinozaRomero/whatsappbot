@@ -1,8 +1,9 @@
-import { Column } from 'typeorm';
+import { Column, Entity, PrimaryColumn } from 'typeorm';
 
+@Entity('groups')
 export class Group {
   // @PrimaryGeneratedColumn('increment')
-  @Column('int')
+  @PrimaryColumn('int')
   id: number;
 
   @Column('text')
