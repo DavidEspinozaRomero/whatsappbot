@@ -1,9 +1,56 @@
-import { Controller } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ResponsesService } from './responses.service';
+import {
+  CreatePredefinedResponseDto,
+  UpdatePredefinedResponseDto,
+} from './dto';
 
 @Controller('responses')
 export class ResponsesController {
   constructor(private readonly responsesService: ResponsesService) {}
+
+  @Post('predefined')
+  createPredefined(
+    @Body() createPredefinedResponseDto: CreatePredefinedResponseDto
+  ) {
+    return this.responsesService.createPredefinedResponse(
+      createPredefinedResponseDto
+    );
+  }
+
+  @Get('predefined')
+  findAllPredefined() {
+    return this.responsesService.findAllPredefinedResponse();
+  }
+
+  @Get('predefined:id')
+  findOnePredefined(@Param('id') id: string) {
+    return this.responsesService.findOnePredefinedResponse(+id);
+  }
+
+  @Patch('predefined:id')
+  updatePredefined(
+    @Param('id') id: string,
+    @Body() updatePredefinedResponseDto: UpdatePredefinedResponseDto
+  ) {
+    return this.responsesService.updatePredefinedResponse(
+      +id,
+      updatePredefinedResponseDto
+    );
+  }
+
+  @Delete('predefined:id')
+  removePredefined(@Param('id') id: string) {
+    return this.responsesService.removePredefinedResponse(+id);
+  }
 
   // @Post()
   // create(@Body() createResponseDto: CreateResponseDto) {

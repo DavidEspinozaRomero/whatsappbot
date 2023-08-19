@@ -4,17 +4,19 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common/exceptions';
 
-import WAWebJS, { Client, LocalAuth, MessageTypes } from 'whatsapp-web.js';
+import WAWebJS, { ChatId, Client, LocalAuth } from 'whatsapp-web.js';
 // import * as qrcode from 'qrcode-terminal';
 import * as fs from 'fs';
 import * as qr from 'qr-image';
 
-import { CreateWebhookDto } from './dto/create-webhook.dto';
-import { UpdateWebhookDto } from './dto/update-webhook.dto';
 import { ContactsService } from '../contacts/contacts.service';
 import { CreateMessageDto, MessagesService } from '../messages';
 import { Contact } from '../contacts/entities/contact.entity';
 import { SendMessageDto, SendMessageToContactDto } from './dto';
+import { randomUUID } from 'crypto';
+import { GroupsService } from '../groups/groups.service';
+import { Group } from '../groups/entities';
+import { ResponsesService } from '../responses/responses.service';
 
 @Injectable()
 export class WebhookService {
@@ -25,7 +27,9 @@ export class WebhookService {
 
   constructor(
     private readonly contactService: ContactsService,
-    private readonly messagesService: MessagesService
+    private readonly messagesService: MessagesService,
+    private readonly groupsService: GroupsService,
+    private readonly responsesService: ResponsesService
   ) {
     this.#conectWhitWhatsAppWeb();
   }
@@ -94,15 +98,17 @@ export class WebhookService {
 
   // TODO: agregar metodo para diferenciar cuando enviar mensajes
   async handleMessage(msg: WAWebJS.Message) {
-    const { from, to, body, hasMedia, fromMe, deviceType, type } = msg;
+    const { from, body, hasMedia, fromMe, deviceType, type, broadcast } = msg;
+
+    // const info:WAWebJS.MessageInfo = await msg.getInfo();
+    if (broadcast) return;
+    const contact: WAWebJS.Contact = await msg.getContact();
+    const { verifiedName, pushname, isBlocked, isBusiness, isEnterprise } =
+      contact;
 
     try {
-      const contact: WAWebJS.Contact = await msg.getContact();
-      const { verifiedName, pushname, isBlocked, isBusiness, isEnterprise } =
-        contact;
-
       // save/update contact
-      const contactDB = await this.#checkContact(
+      const [contactDB, isNewContact] = await this.#checkContact(
         from,
         verifiedName ?? pushname,
         isBlocked,
@@ -124,13 +130,65 @@ export class WebhookService {
       );
 
       // ignore contact
-      if (contactDB.isBlocked) return;
+      if (isBlocked || fromMe) return;
 
+      // TODO: Create a flow for the message welcome -> menu selection -> bucle -> welcome
+      if (isNewContact) {
+        this.sendMessage({
+          cellphone: contactDB.cellphone,
+          content: 'Welcome to bussinessName!',
+        });
+        // agregar menu inicial
+        return;
+      }
+      this.sendMessage({
+        cellphone: contactDB.cellphone,
+        content: 'Hello again! How can we assist you today?',
+      });
+      // 'Hello again! How can we assist you today?'
+
+      const responses = await this.responsesService.findAllPredefinedResponse();
+      // responses.at(-1)
+      // responses.forEach((response) => {
+      //   if (response.responseType === 'text') {
+      //     response.content.forEach((text) => {
+      //       this.sendMessage({
+      //         cellphone: contactDB.cellphone,
+      //         content: text,
+      //       });
+      //     });
+      //   }
+      // });
+
+      // TODO: check if the message is in a group
       if (body === 'AGENTE') {
-        const group = await this.#createGroupWhit('Soporte Técnico', contact);
+        const groupName = 'Soporte Técnico ' + randomUUID().split('-')[0];
+        const { gid } = await this.#createGroupWhit(groupName, contact);
+        // const group = this.groupsService.findOneGroup(+gid);
+        const groupManagement = this.groupsService.findOneGroupManagement(+gid);
 
-        const actualgroup = await this.client.getCommonGroups(group.gid)[0];
-        const actualChatGroup = await this.client.getChatById(actualgroup);
+        let newGroup: Group;
+        // let newGroupManagement: GroupManagement;
+        if (!groupManagement) {
+          newGroup = await this.groupsService.createGroup({
+            id: +gid,
+            description: 'agente',
+            groupMembers: [contactDB.id],
+            groupName,
+          });
+
+          // newGroupManagement =
+          await this.groupsService.createGroupManagement({
+            groupId: newGroup.id,
+            permissions: 'all',
+            status: '',
+            role: '',
+            lastSeen: new Date(),
+          });
+        } else {
+        }
+        // const {}: ChatId = await this.client.getCommonGroups(gid)[0];
+        // const actualChatGroup = await this.client.getChatById(actualgroup);
         // actualChatGroup.
       }
       // if (hasMedia) await this.#recordMedia(msg);
@@ -139,14 +197,11 @@ export class WebhookService {
       const chat: WAWebJS.Chat = await msg.getChat();
       // if (!user.hasPaid || chat.isGroup) return;
       if (chat.isGroup) return;
-
-      // const info:WAWebJS.MessageInfo = await msg.getInfo();
-
-      // console.log( {from, body, hasMedia} );
     } catch (err) {
       this.handleExceptions(err);
     }
   }
+
   #checkContact(
     WACellphone: string,
     username: string,
@@ -241,38 +296,37 @@ export class WebhookService {
   }
 
   sendMessage(sendMessageDto: SendMessageDto) {
-    const { cellphone, content } = sendMessageDto;
-    this.messagesService.sendMessage(this.client, cellphone, content);
+    this.messagesService.sendMessage(this.client, sendMessageDto);
   }
 
   async sendMessageToContact(sendMessageToContact: SendMessageToContactDto) {
     const { id, content } = sendMessageToContact;
     const { cellphone } = await this.contactService.findOne(id);
 
-    this.messagesService.sendMessage(this.client, cellphone, content);
+    this.messagesService.sendMessage(this.client, { cellphone, content });
   }
 
   //#endregion Methods
 
-  create(createWebhookDto: CreateWebhookDto) {
-    return 'This action adds a new webhook';
-  }
+  // create(createWebhookDto: CreateWebhookDto) {
+  //   return 'This action adds a new webhook';
+  // }
 
-  findAll() {
-    return `This action returns all webhook`;
-  }
+  // findAll() {
+  //   return `This action returns all webhook`;
+  // }
 
-  findOne(id: number) {
-    return `This action returns a #${id} webhook`;
-  }
+  // findOne(id: number) {
+  //   return `This action returns a #${id} webhook`;
+  // }
 
-  update(id: number, updateWebhookDto: UpdateWebhookDto) {
-    return `This action updates a #${id} webhook`;
-  }
+  // update(id: number, updateWebhookDto: UpdateWebhookDto) {
+  //   return `This action updates a #${id} webhook`;
+  // }
 
-  remove(id: number) {
-    return `This action removes a #${id} webhook`;
-  }
+  // remove(id: number) {
+  //   return `This action removes a #${id} webhook`;
+  // }
 
   handleExceptions(err: any): never {
     if (err.code === '23505') throw new BadRequestException(err.detail);

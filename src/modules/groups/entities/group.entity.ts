@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { GroupManagement } from './group-management.entity';
 
 @Entity('groups')
 export class Group {
@@ -23,6 +24,8 @@ export class Group {
 
   // Relations
 
+  @OneToMany(()=> GroupManagement, groupManagement => groupManagement.groupId)
+  createdBy: GroupManagement; // (User ID)
   // @ManyToOne(()=> User, user => user.group)
   // createdBy: User; // (User ID)
 

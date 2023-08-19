@@ -7,7 +7,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 
 import { Not, Repository } from 'typeorm';
-import {Client, MessageMedia, } from 'whatsapp-web.js';
+import { Client, MessageMedia } from 'whatsapp-web.js';
 
 // import { PaginationDTO } from '../common/dto/pagination.dto';
 // import { User } from '../auth/entities/user.entity';
@@ -18,6 +18,7 @@ import { CreateMessageDto, UpdateMessageDto } from './dto';
 // import { initialData } from '../seed/data/initialData';
 import { Contact } from '../contacts/entities/contact.entity';
 import { isWhatsappNumberPattern } from 'src/utils';
+import { SendMessageDto } from '../webhook/dto';
 
 @Injectable()
 export class MessagesService {
@@ -131,22 +132,17 @@ export class MessagesService {
   // #region methods
   sendMessage(
     client: Client,
-    cellphone: string,
-    content: string | MessageMedia
+    sendMessageDto: SendMessageDto
+    // cellphone: string,
+    // content: string | MessageMedia
   ) {
+    const { cellphone, content } = sendMessageDto;
     try {
-      client.sendMessage(this.#chageToWhatsAppNumber(cellphone), content);
+      client.sendMessage(cellphone, content);
     } catch (err) {
       this.handleExceptions(err);
     }
   }
-  #chageToWhatsAppNumber(cellphone: string) {
-    if (!isWhatsappNumberPattern.test(cellphone)) {
-      cellphone = cellphone.replace(/\D/g, '').concat('@c.us');
-    }
-    return cellphone;
-  }
-
 
   //TODO: crear un handleExceptions global (serviceName:string, err:any)
   private handleExceptions(err: any): never {

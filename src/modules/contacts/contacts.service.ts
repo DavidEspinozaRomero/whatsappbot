@@ -75,11 +75,12 @@ export class ContactsService {
     isBlocked: boolean,
     isBusiness: boolean,
     isEnterprise: boolean
-  ) {
+  ): Promise<[Contact, boolean]> {
     let contact = await this.findOneByPhone(WACellphone);
-
+    let isNewContact = false;
     // check and create contact
     if (!contact) {
+      isNewContact = true;
       contact = await this.create({
         cellphone: WACellphone,
         created_at: new Date(),
@@ -98,7 +99,8 @@ export class ContactsService {
         last_seen: new Date(),
       });
     }
-    return contact;
+
+    return [contact, isNewContact];
   }
 
   remove(id: number) {

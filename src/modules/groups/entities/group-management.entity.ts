@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Group } from './group.entity';
 
 @Entity('group_management')
 export class GroupManagement {
@@ -21,6 +22,7 @@ export class GroupManagement {
   permissions: string; // (Array of allowed actions)
 
   // Relations
-  // groupID // (Foreign Key)
+  @ManyToOne(() => Group, (group) => group.id)
+  groupId: Group; // (Foreign Key)
   // userID // (Foreign Key)
 }
