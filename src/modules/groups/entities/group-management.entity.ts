@@ -1,5 +1,11 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Group } from './group.entity';
+// import { User } from 'src/modules/auth/entities/user.entity';
 
 @Entity('group_management')
 export class GroupManagement {
@@ -22,7 +28,9 @@ export class GroupManagement {
   permissions: string; // (Array of allowed actions)
 
   // Relations
-  @ManyToOne(() => Group, (group) => group.id)
-  groupId: Group; // (Foreign Key)
-  // userID // (Foreign Key)
+  @ManyToOne(() => Group, (group) => group.management)
+  group: Group; // (Foreign Key)
+
+  // @ManyToOne(() => User, (user) => user.groupManagement)
+  // userID: User // (Foreign Key)
 }

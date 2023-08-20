@@ -46,6 +46,17 @@ export class ResponsesService {
     }
   }
 
+  async findOnePredefinedResponseByType(type: string) {
+    try {
+      const predefinedResponse =
+        await this.predefinedResponseRepository.findOneBy({
+          responseType: type,
+        });
+      return predefinedResponse;
+    } catch (err) {
+      console.log(err);
+    }
+  }
   async findOnePredefinedResponse(id: number) {
     try {
       const predefinedResponse =

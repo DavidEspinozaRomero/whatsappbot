@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { GroupManagement } from './group-management.entity';
 
 @Entity('groups')
@@ -16,16 +16,20 @@ export class Group {
   @Column('text')
   description: string;
 
-  @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
+
+  @Column('int', { nullable: true })
+  rate: number; // (e.g., active, inactive)
 
   // isPrivate (Boolean)
   // isAdmin (Array of User IDs with admin privileges)
 
   // Relations
 
-  @OneToMany(()=> GroupManagement, groupManagement => groupManagement.groupId)
-  createdBy: GroupManagement; // (User ID)
+  @OneToMany(()=> GroupManagement, groupManagement => groupManagement.group)
+  management: GroupManagement;
+
   // @ManyToOne(()=> User, user => user.group)
   // createdBy: User; // (User ID)
 

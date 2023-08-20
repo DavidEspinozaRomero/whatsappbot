@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common/exceptions';
 
-import WAWebJS, { ChatId, Client, LocalAuth } from 'whatsapp-web.js';
+import WAWebJS, { Client, LocalAuth } from 'whatsapp-web.js';
 // import * as qrcode from 'qrcode-terminal';
 import * as fs from 'fs';
 import * as qr from 'qr-image';
@@ -45,10 +45,6 @@ export class WebhookService {
 
       this.client.on('ready', async () => {
         console.log('ready!');
-        // await this.client.getContacts()
-        // await this.client.getFormattedNumber(contacts[0].id._serialized)
-
-        //console.log(await this.client.createGroup(groupName, contacts));
       });
 
       this.client.on('message', (msg: WAWebJS.Message) => {
@@ -101,7 +97,9 @@ export class WebhookService {
     const { from, body, hasMedia, fromMe, deviceType, type, broadcast } = msg;
 
     // const info:WAWebJS.MessageInfo = await msg.getInfo();
+
     if (broadcast) return;
+
     const contact: WAWebJS.Contact = await msg.getContact();
     const { verifiedName, pushname, isBlocked, isBusiness, isEnterprise } =
       contact;
@@ -117,6 +115,8 @@ export class WebhookService {
       );
 
       //save messages in DB
+
+      // if (hasMedia) await this.#recordMedia(msg);
       this.#saveMessage(
         {
           content: body,
@@ -132,22 +132,76 @@ export class WebhookService {
       // ignore contact
       if (isBlocked || fromMe) return;
 
-      // TODO: Create a flow for the message welcome -> menu selection -> bucle -> welcome
-      if (isNewContact) {
-        this.sendMessage({
-          cellphone: contactDB.cellphone,
-          content: 'Welcome to bussinessName!',
-        });
-        // agregar menu inicial
-        return;
-      }
-      this.sendMessage({
-        cellphone: contactDB.cellphone,
-        content: 'Hello again! How can we assist you today?',
-      });
-      // 'Hello again! How can we assist you today?'
+      // TODO: diferenciar cuando responder al mensaje
+      // if (!user.hasPaid) return;
 
-      const responses = await this.responsesService.findAllPredefinedResponse();
+      // TODO: check the stage of contact/client
+      // TODO: Create a flow for the message welcome -> menu selection -> bucle -> welcome
+      switch (true) {
+        case isNewContact:
+          this.sendMessage({
+            cellphone: contactDB.cellphone,
+            content: 'Welcome to bussinessName!',
+          });
+          // agregar menu inicial
+          break;
+
+          const { isGroup } = await msg.getChat();
+        case isGroup:
+          break;
+        case !isNewContact:
+          this.sendMessage({
+            cellphone: contactDB.cellphone,
+            content: 'Hello again! How can we assist you today?',
+          });
+          // agregar menu inicial
+          break;
+
+        // case predefined:
+        // TODO: check and respond
+        //   break;
+        case body === 'AGENTE':
+          // TODO: check if the contact has an active group
+          const groupName = 'Soporte Técnico ' + randomUUID().split('-')[0];
+          const { gid } = await this.#createGroupWhit(groupName, contact);
+          const group = this.groupsService.findOneGroup(+gid);
+          // const groupManagement = this.groupsService.findOneGroupManagement(+gid);
+
+          let newGroup: Group;
+          // let newGroupManagement: GroupManagement;
+          if (!group) {
+            newGroup = await this.groupsService.createGroup({
+              id: +gid,
+              description: 'agente',
+              groupMembers: [contactDB.id],
+              groupName,
+            });
+
+            // newGroupManagement =
+            await this.groupsService.createGroupManagement(
+              {
+                permissions: 'all',
+                status: 'active',
+                role: 'admin',
+                lastSeen: new Date(),
+              },
+              newGroup
+            );
+          }
+          // const {}: ChatId = await this.client.getCommonGroups(gid)[0];
+          // const actualChatGroup = await this.client.getChatById(actualgroup);
+          // actualChatGroup.
+          break;
+        // case val:
+        //   break;
+        // case val:
+        //   break;
+
+        default:
+          break;
+      }
+
+      // const responses = await this.responsesService.findAllPredefinedResponse();
       // responses.at(-1)
       // responses.forEach((response) => {
       //   if (response.responseType === 'text') {
@@ -159,44 +213,6 @@ export class WebhookService {
       //     });
       //   }
       // });
-
-      // TODO: check if the message is in a group
-      if (body === 'AGENTE') {
-        const groupName = 'Soporte Técnico ' + randomUUID().split('-')[0];
-        const { gid } = await this.#createGroupWhit(groupName, contact);
-        // const group = this.groupsService.findOneGroup(+gid);
-        const groupManagement = this.groupsService.findOneGroupManagement(+gid);
-
-        let newGroup: Group;
-        // let newGroupManagement: GroupManagement;
-        if (!groupManagement) {
-          newGroup = await this.groupsService.createGroup({
-            id: +gid,
-            description: 'agente',
-            groupMembers: [contactDB.id],
-            groupName,
-          });
-
-          // newGroupManagement =
-          await this.groupsService.createGroupManagement({
-            groupId: newGroup.id,
-            permissions: 'all',
-            status: '',
-            role: '',
-            lastSeen: new Date(),
-          });
-        } else {
-        }
-        // const {}: ChatId = await this.client.getCommonGroups(gid)[0];
-        // const actualChatGroup = await this.client.getChatById(actualgroup);
-        // actualChatGroup.
-      }
-      // if (hasMedia) await this.#recordMedia(msg);
-
-      // TODO: diferenciar cuando responder al mensaje
-      const chat: WAWebJS.Chat = await msg.getChat();
-      // if (!user.hasPaid || chat.isGroup) return;
-      if (chat.isGroup) return;
     } catch (err) {
       this.handleExceptions(err);
     }
@@ -226,7 +242,7 @@ export class WebhookService {
   }
 
   async #responseMessage(client: Client, msg: WAWebJS.Message) {
-    const { from, to, body, reply, hasMedia } = msg;
+    // const { from, to, body, reply, hasMedia } = msg;
     // let { data } = await this.getDBQuestionAnswer(user);
 
     // const now: string = new Date().toTimeString().split(' ')[0];

@@ -33,7 +33,8 @@ export class GroupsService {
     }
   }
   async createGroupManagement(
-    createGroupManagementDto: CreateGroupManagementDto
+    createGroupManagementDto: CreateGroupManagementDto,
+    group: Group
   ) {
     const { role, status, permissions } = createGroupManagementDto;
     try {
@@ -42,6 +43,7 @@ export class GroupsService {
         status,
         permissions,
         lastSeen: new Date(),
+        group,
       });
 
       await this.groupManagementRepository.save(newGroupManagement);
@@ -66,7 +68,7 @@ export class GroupsService {
   }
   async findOneGroupManagement(id: number) {
     try {
-      const group = await this.groupManagementRepository.findBy({ id });
+      const group = await this.groupManagementRepository.findOneBy({ id });
       return group;
     } catch (err) {
       console.log(err);
