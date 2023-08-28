@@ -23,6 +23,7 @@ export class WebhookService {
   //#region variables
   private readonly logger = new Logger('ContactsService');
   client!: WAWebJS.Client;
+  stateContact = {};
   //#endregion variables
 
   constructor(
@@ -97,8 +98,7 @@ export class WebhookService {
     const { from, body, hasMedia, fromMe, deviceType, type, broadcast } = msg;
 
     // const info:WAWebJS.MessageInfo = await msg.getInfo();
-
-    if (broadcast) return;
+    if (broadcast || from == 'status@broadcast') return;
 
     const contact: WAWebJS.Contact = await msg.getContact();
     const { verifiedName, pushname, isBlocked, isBusiness, isEnterprise } =
@@ -115,7 +115,7 @@ export class WebhookService {
       );
 
       //save messages in DB
-
+      // TODO: voiceToText api
       // if (hasMedia) await this.#recordMedia(msg);
       this.#saveMessage(
         {
@@ -129,76 +129,75 @@ export class WebhookService {
         contactDB
       );
 
-      // ignore contact
-      if (isBlocked || fromMe) return;
-
       // TODO: diferenciar cuando responder al mensaje
       // if (!user.hasPaid) return;
+      const { isGroup } = await msg.getChat();
+      if (isBlocked || fromMe || isGroup) return;
+      console.log(body);
 
       // TODO: check the stage of contact/client
-      // TODO: Create a flow for the message welcome -> menu selection -> bucle -> welcome
-      switch (true) {
-        case isNewContact:
-          this.sendMessage({
-            cellphone: contactDB.cellphone,
-            content: 'Welcome to bussinessName!',
-          });
-          // agregar menu inicial
-          break;
+      if (isNewContact) {
+        this.#handleNewContactChat(contactDB.cellphone);
+      } else {
+        // TODO: Create a flow for the message welcome -> menu selection -> bucle -> welcome
+        this.#handleContactChat(contactDB.cellphone);
 
-          const { isGroup } = await msg.getChat();
-        case isGroup:
-          break;
-        case !isNewContact:
-          this.sendMessage({
-            cellphone: contactDB.cellphone,
-            content: 'Hello again! How can we assist you today?',
-          });
-          // agregar menu inicial
-          break;
+        this.stateContact[contactDB.id] = 0;
 
-        // case predefined:
-        // TODO: check and respond
-        //   break;
-        case body === 'AGENTE':
-          // TODO: check if the contact has an active group
-          const groupName = 'Soporte Técnico ' + randomUUID().split('-')[0];
-          const { gid } = await this.#createGroupWhit(groupName, contact);
-          const group = this.groupsService.findOneGroup(+gid);
-          // const groupManagement = this.groupsService.findOneGroupManagement(+gid);
-
-          let newGroup: Group;
-          // let newGroupManagement: GroupManagement;
-          if (!group) {
-            newGroup = await this.groupsService.createGroup({
-              id: +gid,
-              description: 'agente',
-              groupMembers: [contactDB.id],
-              groupName,
+        if (this.stateContact[contactDB.id]) return;
+        switch (this.stateContact[contactDB.id]) {
+          case 1:
+            const { content } =
+              await this.responsesService.findOnePredefinedResponseByType(
+                'FAQs'
+              );
+            content.forEach((text) => {
+              this.sendMessage({
+                cellphone: contactDB.cellphone,
+                content: text,
+              });
             });
+            break;
+          case body == 'AGENTE':
+            const groupName = 'Soporte Técnico ' + randomUUID().split('-')[0];
+            const { gid } = await this.#createGroupWhit(groupName, contact);
+            const group = this.groupsService.findOneGroup(+gid);
+            // const groupManagement = this.groupsService.findOneGroupManagement(+gid);
 
-            // newGroupManagement =
-            await this.groupsService.createGroupManagement(
-              {
-                permissions: 'all',
-                status: 'active',
-                role: 'admin',
-                lastSeen: new Date(),
-              },
-              newGroup
-            );
-          }
-          // const {}: ChatId = await this.client.getCommonGroups(gid)[0];
-          // const actualChatGroup = await this.client.getChatById(actualgroup);
-          // actualChatGroup.
-          break;
-        // case val:
-        //   break;
-        // case val:
-        //   break;
+            let newGroup: Group;
+            // let newGroupManagement: GroupManagement;
+            if (!group) {
+              newGroup = await this.groupsService.createGroup({
+                id: +gid,
+                description: 'agente',
+                groupMembers: [contactDB.id],
+                groupName,
+              });
 
-        default:
-          break;
+              // newGroupManagement =
+              await this.groupsService.createGroupManagement(
+                {
+                  permissions: 'all',
+                  status: 'active',
+                  role: 'admin',
+                  lastSeen: new Date(),
+                },
+                newGroup
+              );
+            }
+            // const {}: ChatId = await this.client.getCommonGroups(gid)[0];
+            // const actualChatGroup = await this.client.getChatById(actualgroup);
+            // actualChatGroup.
+            break;
+
+          // case val:
+          //   break;
+          // case val:
+          //   break;
+
+          default:
+            break;
+        }
       }
 
       // const responses = await this.responsesService.findAllPredefinedResponse();
@@ -217,6 +216,56 @@ export class WebhookService {
       this.handleExceptions(err);
     }
   }
+
+  async #handleNewContactChat(cellphone: string) {
+    const { content: welcome } =
+      await this.responsesService.findOnePredefinedResponseByType('welcome');
+    welcome.forEach((text) => {
+      this.sendMessage({
+        cellphone,
+        content: text,
+      });
+    });
+    const { content } =
+      await this.responsesService.findOnePredefinedResponseByType('menu');
+    const response = content.reduce((acc = '', text, index) => {
+      acc += `${index + 1} ${text} `;
+      // ${content.length == index + 1 ? '' : '%0A'}
+      return acc;
+    });
+    this.sendMessage({
+      cellphone,
+      content: response,
+    });
+  }
+  async #handleContactChat(cellphone: string) {
+    const { content: welcome } =
+      await this.responsesService.findOnePredefinedResponseByType('rewelcome');
+    welcome.forEach((text) => {
+      this.sendMessage({
+        cellphone,
+        content: text,
+      });
+    });
+    const { content } =
+      await this.responsesService.findOnePredefinedResponseByType('menu');
+    const response = content.reduce((acc, text, index) => {
+      acc += `${index + 1} ${text} `;
+      return acc;
+    });
+    this.sendMessage({
+      cellphone,
+      content: response,
+    });
+  }
+  // #handleGroupChat(cellphone: string) {
+  //   // TODO: check if the contact has an active group support/financial/etc, its state
+  //   this.sendMessage({
+  //     cellphone,
+  //     content: 'Welcome to bussinessName!',
+  //   });
+  //   // agregar menu inicial
+  // }
 
   #checkContact(
     WACellphone: string,
@@ -241,66 +290,60 @@ export class WebhookService {
     return await this.client.createGroup(groupName, [contact]);
   }
 
-  async #responseMessage(client: Client, msg: WAWebJS.Message) {
-    // const { from, to, body, reply, hasMedia } = msg;
-    // let { data } = await this.getDBQuestionAnswer(user);
-
-    // const now: string = new Date().toTimeString().split(' ')[0];
-    // data = this.filterByString(data, body);
-    // data = this.filterByTime(data, now);
-    // data = this.filterByType(data);
-    // data = this.filterByCategory(data);
-
-    // TODO: agregar un tipo al mensage (texto/imagen/audio/url)
-    // const find = data.find(({ keywords }) =>
-    //   keywords.includes(body.toLowerCase())
-    // );
-
-    // if (!find) return;
-
-    // const { answer } = find;
-
-    // this.sendMessage(client, from, answer);
-
-    // TODO: llamar a la api para responder segun el texto
-    // if (body.toLowerCase().includes('link')) {
-    //   this.sendMessage(client, from, 'https://youtu.be/6CwIB6pQoPo');
-    //   return;
-    // }
-    // if (body.toLowerCase().includes('saludo')) {
-    //   // texto
-    //   // agregar un metodo para responder segun el texto
-    //   const contact: WAWebJS.Contact = await msg.getContact();
-    //   this.sendMessage(client, from, `Hello ${contact.shortName}`);
-    //   return;
-    // }
-    // if (body.toLowerCase().includes('imagen')) {
-    //   // img
-    //   const DBresponse = 'img1.png';
-    //   const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
-    //   this.sendMessage(client, from, media);
-    //   return;
-    // }
-    // if (body.toLowerCase().includes('audio')) {
-    //   // audio
-    //   const DBresponse = 'audio1.mp3';
-    //   const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
-    // this.sendMessage(client, from, media);
-    //   return;
-    // }
-    // if (body.toLowerCase().includes('url')) {
-    //   // url
-    //   const DBresponse = 'https://randomuser.me/api/portraits/women/0.jpg';
-    //   const media = await MessageMedia.fromUrl(DBresponse);
-    //   this.sendMessage(client, from, media);
-    //   return;
-    // }
-  }
-  async #recordMedia(msg: WAWebJS.Message) {
-    const media = await msg.downloadMedia();
-    // do something with the media data here
-    return '';
-  }
+  // async #responseMessage(client: Client, msg: WAWebJS.Message) {
+  //   // const { from, to, body, reply, hasMedia } = msg;
+  //   // let { data } = await this.getDBQuestionAnswer(user);
+  //   // const now: string = new Date().toTimeString().split(' ')[0];
+  //   // data = this.filterByString(data, body);
+  //   // data = this.filterByTime(data, now);
+  //   // data = this.filterByType(data);
+  //   // data = this.filterByCategory(data);
+  //   // TODO: agregar un tipo al mensage (texto/imagen/audio/url)
+  //   // const find = data.find(({ keywords }) =>
+  //   //   keywords.includes(body.toLowerCase())
+  //   // );
+  //   // if (!find) return;
+  //   // const { answer } = find;
+  //   // this.sendMessage(client, from, answer);
+  //   // TODO: llamar a la api para responder segun el texto
+  //   // if (body.toLowerCase().includes('link')) {
+  //   //   this.sendMessage(client, from, 'https://youtu.be/6CwIB6pQoPo');
+  //   //   return;
+  //   // }
+  //   // if (body.toLowerCase().includes('saludo')) {
+  //   //   // texto
+  //   //   // agregar un metodo para responder segun el texto
+  //   //   const contact: WAWebJS.Contact = await msg.getContact();
+  //   //   this.sendMessage(client, from, `Hello ${contact.shortName}`);
+  //   //   return;
+  //   // }
+  //   // if (body.toLowerCase().includes('imagen')) {
+  //   //   // img
+  //   //   const DBresponse = 'img1.png';
+  //   //   const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
+  //   //   this.sendMessage(client, from, media);
+  //   //   return;
+  //   // }
+  //   // if (body.toLowerCase().includes('audio')) {
+  //   //   // audio
+  //   //   const DBresponse = 'audio1.mp3';
+  //   //   const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
+  //   // this.sendMessage(client, from, media);
+  //   //   return;
+  //   // }
+  //   // if (body.toLowerCase().includes('url')) {
+  //   //   // url
+  //   //   const DBresponse = 'https://randomuser.me/api/portraits/women/0.jpg';
+  //   //   const media = await MessageMedia.fromUrl(DBresponse);
+  //   //   this.sendMessage(client, from, media);
+  //   //   return;
+  //   // }
+  // }
+  // async #recordMedia(msg: WAWebJS.Message) {
+  //   const media = await msg.downloadMedia();
+  //   // do something with the media data here
+  //   return '';
+  // }
   #generateImage(base64: string, userId: string, cb: () => void) {
     const qr_svg = qr.image(base64, { type: 'svg', margin: 4 });
     qr_svg.pipe(fs.createWriteStream(`qr/${userId}.svg`));
