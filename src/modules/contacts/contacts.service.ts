@@ -67,7 +67,7 @@ export class ContactsService {
     }
   }
   async update(id: number, updateContactDto: UpdateContactDto) {
-    return `This action updates a #${id} contact`;
+    return `This action updates a #${id} contact ${updateContactDto}`;
   }
   async checkContact(
     WACellphone: string,
@@ -75,12 +75,11 @@ export class ContactsService {
     isBlocked: boolean,
     isBusiness: boolean,
     isEnterprise: boolean
-  ): Promise<[Contact, boolean]> {
+  ): Promise<Contact> {
     let contact = await this.findOneByPhone(WACellphone);
-    let isNewContact = false;
+
     // check and create contact
     if (!contact) {
-      isNewContact = true;
       contact = await this.create({
         cellphone: WACellphone,
         created_at: new Date(),
@@ -93,6 +92,7 @@ export class ContactsService {
     } else {
       contact = await this.updateLastSeen({
         ...contact,
+        username,
         isBlocked,
         isBusiness,
         isEnterprise,
@@ -100,7 +100,7 @@ export class ContactsService {
       });
     }
 
-    return [contact, isNewContact];
+    return contact;
   }
 
   remove(id: number) {

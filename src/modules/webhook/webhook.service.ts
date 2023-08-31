@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common/exceptions';
 
 import WAWebJS, { Client, LocalAuth } from 'whatsapp-web.js';
-// import * as qrcode from 'qrcode-terminal';
+import * as qrcode from 'qrcode-terminal';
 import * as fs from 'fs';
 import * as qr from 'qr-image';
 
@@ -18,12 +18,36 @@ import { GroupsService } from '../groups/groups.service';
 import { Group } from '../groups/entities';
 import { ResponsesService } from '../responses/responses.service';
 
+// agregar usuario {user.id: { contact.id:'initial' }}
+// states: intro | serviceOption(FAQs,Services,BOT,AGENTE)
+// groupStates: open | close
+
 @Injectable()
 export class WebhookService {
   //#region variables
   private readonly logger = new Logger('ContactsService');
   client!: WAWebJS.Client;
   stateContact = {};
+  // users = new Set();
+  // stateContact = new Map();
+  // users = {
+  //   // opt1
+  //   user1: {
+  //     states: [''],
+  //     stateContact1: '',
+  //     stateContact2: ''
+  //   },
+  //   // opt2
+  //   user2: {
+  //     states: [''],
+  //     stateContact1: '',
+  //     contact2: {
+  //       state: '',
+  //       groupState:''
+  //     }
+  //   },
+  // };
+
   //#endregion variables
 
   constructor(
@@ -36,9 +60,9 @@ export class WebhookService {
   }
 
   //#region Whatsapp
-  #conectWhitWhatsAppWeb() {
-    this.client = this.#createClient();
-
+  async #conectWhitWhatsAppWeb() {
+    console.log('???');
+    this.client = await this.#createClient();
     try {
       this.client.on('authenticated', (session) => {
         console.log('authenticated', session);
@@ -46,6 +70,14 @@ export class WebhookService {
 
       this.client.on('ready', async () => {
         console.log('ready!');
+        // agregar al objeto users el user
+      });
+
+      this.client.on('group_join', async (args: WAWebJS.GroupChat) => {
+        console.log('group join');
+        args.sendMessage('test group message');
+        console.log(args);
+        // this.handleGroup(group);
       });
 
       this.client.on('message', (msg: WAWebJS.Message) => {
@@ -58,7 +90,7 @@ export class WebhookService {
             this.#deleteFile('qr', `${'userId'}.svg`);
           }, 5000);
         });
-        // qrcode.generate(qr, { small: true }); // qr terminal
+        qrcode.generate(qr, { small: true }); // qr terminal
       });
 
       this.client.on('disconnected', () => {
@@ -72,7 +104,7 @@ export class WebhookService {
     }
   }
 
-  #createClient() {
+  async #createClient() {
     try {
       const client = new Client({
         authStrategy: new LocalAuth({
@@ -100,13 +132,18 @@ export class WebhookService {
     // const info:WAWebJS.MessageInfo = await msg.getInfo();
     if (broadcast || from == 'status@broadcast') return;
 
+    // TODO: diferenciar cuando responder al mensaje
     const contact: WAWebJS.Contact = await msg.getContact();
     const { verifiedName, pushname, isBlocked, isBusiness, isEnterprise } =
       contact;
+    const { isGroup } = await msg.getChat();
+
+    // if (!user.hasPaid) return;
+    if (isBlocked || fromMe || isGroup) return;
 
     try {
       // save/update contact
-      const [contactDB, isNewContact] = await this.#checkContact(
+      const contactDB = await this.#checkContact(
         from,
         verifiedName ?? pushname,
         isBlocked,
@@ -129,135 +166,89 @@ export class WebhookService {
         contactDB
       );
 
-      // TODO: diferenciar cuando responder al mensaje
-      // if (!user.hasPaid) return;
-      const { isGroup } = await msg.getChat();
-      if (isBlocked || fromMe || isGroup) return;
-      console.log(body);
-
       // TODO: check the stage of contact/client
-      if (isNewContact) {
-        this.#handleNewContactChat(contactDB.cellphone);
-      } else {
-        // TODO: Create a flow for the message welcome -> menu selection -> bucle -> welcome
-        this.#handleContactChat(contactDB.cellphone);
+      this.stateContact[contactDB.id] ??= 'welcome';
 
-        this.stateContact[contactDB.id] = 0;
+      if (body == 'AGENTE') {
+        const groupName = 'Soporte Técnico ' + randomUUID().split('-')[0];
+        const { gid } = await this.#createGroupWhit(groupName, contact);
 
-        if (this.stateContact[contactDB.id]) return;
-        switch (this.stateContact[contactDB.id]) {
-          case 1:
-            const { content } =
-              await this.responsesService.findOnePredefinedResponseByType(
-                'FAQs'
-              );
-            content.forEach((text) => {
-              this.sendMessage({
-                cellphone: contactDB.cellphone,
-                content: text,
-              });
-            });
-            break;
-          case body == 'AGENTE':
-            const groupName = 'Soporte Técnico ' + randomUUID().split('-')[0];
-            const { gid } = await this.#createGroupWhit(groupName, contact);
-            const group = this.groupsService.findOneGroup(+gid);
-            // const groupManagement = this.groupsService.findOneGroupManagement(+gid);
+        const group = this.groupsService.findOneGroup(+gid);
+        // const groupManagement = this.groupsService.findOneGroupManagement(+gid);
 
-            let newGroup: Group;
-            // let newGroupManagement: GroupManagement;
-            if (!group) {
-              newGroup = await this.groupsService.createGroup({
-                id: +gid,
-                description: 'agente',
-                groupMembers: [contactDB.id],
-                groupName,
-              });
+        let newGroup: Group;
+        // let newGroupManagement: GroupManagement;
+        if (!group) {
+          newGroup = await this.groupsService.createGroup({
+            id: +gid,
+            description: 'agente',
+            groupMembers: [contactDB.id],
+            groupName,
+          });
 
-              // newGroupManagement =
-              await this.groupsService.createGroupManagement(
-                {
-                  permissions: 'all',
-                  status: 'active',
-                  role: 'admin',
-                  lastSeen: new Date(),
-                },
-                newGroup
-              );
-            }
-            // const {}: ChatId = await this.client.getCommonGroups(gid)[0];
-            // const actualChatGroup = await this.client.getChatById(actualgroup);
-            // actualChatGroup.
-            break;
-
-          // case val:
-          //   break;
-          // case val:
-          //   break;
-
-          default:
-            break;
+          // newGroupManagement =
+          await this.groupsService.createGroupManagement(
+            {
+              permissions: 'all',
+              status: 'active',
+              role: 'admin',
+              lastSeen: new Date(),
+            },
+            newGroup
+          );
         }
+
+        // const {}: ChatId = await this.client.getCommonGroups(gid)[0];
+        // const actualChatGroup = await this.client.getChatById(actualgroup);
+
+        return;
       }
 
-      // const responses = await this.responsesService.findAllPredefinedResponse();
-      // responses.at(-1)
-      // responses.forEach((response) => {
-      //   if (response.responseType === 'text') {
-      //     response.content.forEach((text) => {
-      //       this.sendMessage({
-      //         cellphone: contactDB.cellphone,
-      //         content: text,
-      //       });
-      //     });
-      //   }
-      // });
+      this.#handleChat(contactDB.cellphone, contactDB.id);
+
+      // TODO: Create a flow for the message welcome -> menu selection -> bucle -> welcome
+      // initial -> menuSelection -> initial/group
+      // agregar usuario {user.id: { contact.id:'initial' }}
+      // states: intro | serviceOption(FAQs,Services,BOT,AGENTE)
+      // groupStates: open | close
     } catch (err) {
       this.handleExceptions(err);
     }
   }
+  async #handleChat(cellphone: string, contactId: number) {
+    // check state
+    const state = this.stateContact[contactId];
 
-  async #handleNewContactChat(cellphone: string) {
-    const { content: welcome } =
-      await this.responsesService.findOnePredefinedResponseByType('welcome');
-    welcome.forEach((text) => {
-      this.sendMessage({
-        cellphone,
-        content: text,
-      });
-    });
-    const { content } =
-      await this.responsesService.findOnePredefinedResponseByType('menu');
-    const response = content.reduce((acc = '', text, index) => {
-      acc += `${index + 1} ${text} `;
-      // ${content.length == index + 1 ? '' : '%0A'}
-      return acc;
-    });
-    this.sendMessage({
-      cellphone,
-      content: response,
-    });
+    // TODO: add to the table next state if required
+    const { content, nextResponse: nextState } =
+      await this.responsesService.findOnePredefinedResponseByType(state);
+    let response: string = '';
+    if (state == 'menu') {
+      response = content
+        .map((text, index) => {
+          return content.length > index + 1
+            ? `${index + 1} ${text}`.concat('\n')
+            : `${index + 1} ${text}`;
+        })
+        .join('');
+    } else {
+      response = content
+        .map((text, index) => {
+          return content.length > index + 1 ? text.concat('\n') : text;
+        })
+        .join('');
+    }
+
+    this.sendMessage({ cellphone, content: response });
+
+    if (nextState) {
+      this.stateContact[contactId] = nextState ;
+      this.#handleChat(cellphone, contactId);
+      return;
+    }
+    this.stateContact[contactId] = 'rewelcome';
   }
-  async #handleContactChat(cellphone: string) {
-    const { content: welcome } =
-      await this.responsesService.findOnePredefinedResponseByType('rewelcome');
-    welcome.forEach((text) => {
-      this.sendMessage({
-        cellphone,
-        content: text,
-      });
-    });
-    const { content } =
-      await this.responsesService.findOnePredefinedResponseByType('menu');
-    const response = content.reduce((acc, text, index) => {
-      acc += `${index + 1} ${text} `;
-      return acc;
-    });
-    this.sendMessage({
-      cellphone,
-      content: response,
-    });
-  }
+
   // #handleGroupChat(cellphone: string) {
   //   // TODO: check if the contact has an active group support/financial/etc, its state
   //   this.sendMessage({
@@ -290,60 +281,6 @@ export class WebhookService {
     return await this.client.createGroup(groupName, [contact]);
   }
 
-  // async #responseMessage(client: Client, msg: WAWebJS.Message) {
-  //   // const { from, to, body, reply, hasMedia } = msg;
-  //   // let { data } = await this.getDBQuestionAnswer(user);
-  //   // const now: string = new Date().toTimeString().split(' ')[0];
-  //   // data = this.filterByString(data, body);
-  //   // data = this.filterByTime(data, now);
-  //   // data = this.filterByType(data);
-  //   // data = this.filterByCategory(data);
-  //   // TODO: agregar un tipo al mensage (texto/imagen/audio/url)
-  //   // const find = data.find(({ keywords }) =>
-  //   //   keywords.includes(body.toLowerCase())
-  //   // );
-  //   // if (!find) return;
-  //   // const { answer } = find;
-  //   // this.sendMessage(client, from, answer);
-  //   // TODO: llamar a la api para responder segun el texto
-  //   // if (body.toLowerCase().includes('link')) {
-  //   //   this.sendMessage(client, from, 'https://youtu.be/6CwIB6pQoPo');
-  //   //   return;
-  //   // }
-  //   // if (body.toLowerCase().includes('saludo')) {
-  //   //   // texto
-  //   //   // agregar un metodo para responder segun el texto
-  //   //   const contact: WAWebJS.Contact = await msg.getContact();
-  //   //   this.sendMessage(client, from, `Hello ${contact.shortName}`);
-  //   //   return;
-  //   // }
-  //   // if (body.toLowerCase().includes('imagen')) {
-  //   //   // img
-  //   //   const DBresponse = 'img1.png';
-  //   //   const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
-  //   //   this.sendMessage(client, from, media);
-  //   //   return;
-  //   // }
-  //   // if (body.toLowerCase().includes('audio')) {
-  //   //   // audio
-  //   //   const DBresponse = 'audio1.mp3';
-  //   //   const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
-  //   // this.sendMessage(client, from, media);
-  //   //   return;
-  //   // }
-  //   // if (body.toLowerCase().includes('url')) {
-  //   //   // url
-  //   //   const DBresponse = 'https://randomuser.me/api/portraits/women/0.jpg';
-  //   //   const media = await MessageMedia.fromUrl(DBresponse);
-  //   //   this.sendMessage(client, from, media);
-  //   //   return;
-  //   // }
-  // }
-  // async #recordMedia(msg: WAWebJS.Message) {
-  //   const media = await msg.downloadMedia();
-  //   // do something with the media data here
-  //   return '';
-  // }
   #generateImage(base64: string, userId: string, cb: () => void) {
     const qr_svg = qr.image(base64, { type: 'svg', margin: 4 });
     qr_svg.pipe(fs.createWriteStream(`qr/${userId}.svg`));

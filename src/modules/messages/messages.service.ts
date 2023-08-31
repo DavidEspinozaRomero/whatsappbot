@@ -2,7 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   BadRequestException,
   InternalServerErrorException,
-  NotFoundException,
+  // NotFoundException,
 } from '@nestjs/common/exceptions';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -17,7 +17,6 @@ import { CreateMessageDto, UpdateMessageDto } from './dto';
 // import { Category, TypeCategory } from './entities/category.entity';
 // import { initialData } from '../seed/data/initialData';
 import { Contact } from '../contacts/entities/contact.entity';
-import { isWhatsappNumberPattern } from 'src/utils';
 import { SendMessageDto } from '../webhook/dto';
 
 @Injectable()
@@ -143,6 +142,61 @@ export class MessagesService {
       this.handleExceptions(err);
     }
   }
+  
+  // async #responseMessageByState(client: Client, msg: WAWebJS.Message) {
+  //   // const { from, to, body, reply, hasMedia } = msg;
+  //   // let { data } = await this.getDBQuestionAnswer(user);
+  //   // const now: string = new Date().toTimeString().split(' ')[0];
+  //   // data = this.filterByString(data, body);
+  //   // data = this.filterByTime(data, now);
+  //   // data = this.filterByType(data);
+  //   // data = this.filterByCategory(data);
+  //   // TODO: agregar un tipo al mensage (texto/imagen/audio/url)
+  //   // const find = data.find(({ keywords }) =>
+  //   //   keywords.includes(body.toLowerCase())
+  //   // );
+  //   // if (!find) return;
+  //   // const { answer } = find;
+  //   // this.sendMessage(client, from, answer);
+  //   // TODO: llamar a la api para responder segun el texto
+  //   // if (body.toLowerCase().includes('link')) {
+  //   //   this.sendMessage(client, from, 'https://youtu.be/6CwIB6pQoPo');
+  //   //   return;
+  //   // }
+  //   // if (body.toLowerCase().includes('saludo')) {
+  //   //   // texto
+  //   //   // agregar un metodo para responder segun el texto
+  //   //   const contact: WAWebJS.Contact = await msg.getContact();
+  //   //   this.sendMessage(client, from, `Hello ${contact.shortName}`);
+  //   //   return;
+  //   // }
+  //   // if (body.toLowerCase().includes('imagen')) {
+  //   //   // img
+  //   //   const DBresponse = 'img1.png';
+  //   //   const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
+  //   //   this.sendMessage(client, from, media);
+  //   //   return;
+  //   // }
+  //   // if (body.toLowerCase().includes('audio')) {
+  //   //   // audio
+  //   //   const DBresponse = 'audio1.mp3';
+  //   //   const media = MessageMedia.fromFilePath(`./media/${DBresponse}`);
+  //   // this.sendMessage(client, from, media);
+  //   //   return;
+  //   // }
+  //   // if (body.toLowerCase().includes('url')) {
+  //   //   // url
+  //   //   const DBresponse = 'https://randomuser.me/api/portraits/women/0.jpg';
+  //   //   const media = await MessageMedia.fromUrl(DBresponse);
+  //   //   this.sendMessage(client, from, media);
+  //   //   return;
+  //   // }
+  // }
+  // async #recordMedia(msg: WAWebJS.Message) {
+  //   const media = await msg.downloadMedia();
+  //   // do something with the media data here
+  //   return '';
+  // }
 
   //TODO: crear un handleExceptions global (serviceName:string, err:any)
   private handleExceptions(err: any): never {

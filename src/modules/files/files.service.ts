@@ -1,9 +1,24 @@
+import fs from 'node:fs';
+import qr from 'qr-image';
+// import fs from 'node:fs/promises'
 import { Injectable } from '@nestjs/common';
-import { CreateFileDto } from './dto/create-file.dto';
-import { UpdateFileDto } from './dto/update-file.dto';
+import { CreateFileDto, UpdateFileDto } from './dto';
 
 @Injectable()
 export class FilesService {
+  //#region
+
+  #generateImage(base64: string, userId: string, cb: () => void) {
+    const qr_svg = qr.image(base64, { type: 'svg', margin: 4 });
+    qr_svg.pipe(fs.createWriteStream(`qr/${userId}.svg`));
+    cb();
+  }
+  #deleteFile(dir: string, pathFile: string) {
+    const filePath = `${dir}/${pathFile}`;
+    fs.unlinkSync(filePath);
+  }
+
+  //#endregion
   create(createFileDto: CreateFileDto) {
     return 'This action adds a new file';
   }

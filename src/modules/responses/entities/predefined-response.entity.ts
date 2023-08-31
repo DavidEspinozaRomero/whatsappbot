@@ -12,6 +12,9 @@ export class PredefinedResponse {
   @Column('text')
   responseType: string; // (e.g., FAQs, atention hours, services)
 
+  @Column('text', { nullable: true })
+  nextResponse: string; // (e.g., FAQs, atention hours, services)
+
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
@@ -22,7 +25,6 @@ export class PredefinedResponse {
 
   // Realtions
 
-  
   // @ManyToOne(() => User, (user) => user.predefinedResponse)
   // createdBy: User; //  (User ID who created the response)
 
@@ -38,5 +40,4 @@ export class PredefinedResponse {
 
   // @ManyToOne(() => User, (user) => user.predefinedResponse)
   // sendTo: Contact;
-
 }
