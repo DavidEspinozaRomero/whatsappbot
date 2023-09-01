@@ -22,11 +22,11 @@ export class ResponsesService {
   async createPredefinedResponse(
     createPredefinedResponseDto: CreatePredefinedResponseDto
   ) {
-    const { content, responseType } = createPredefinedResponseDto;
+    const { content, state } = createPredefinedResponseDto;
     try {
       const newPredefinedResponse = this.predefinedResponseRepository.create({
         content,
-        responseType,
+        state,
       });
       await this.predefinedResponseRepository.save(newPredefinedResponse);
       return newPredefinedResponse;
@@ -46,12 +46,26 @@ export class ResponsesService {
     }
   }
 
-  async findOnePredefinedResponseByType(type: string) {
+  async findOnePredefinedResponseByType(state: string) {
     try {
       const predefinedResponse =
         await this.predefinedResponseRepository.findOneBy({
-          responseType: type,
+          state,
+          isActive: true,
         });
+      return predefinedResponse;
+    } catch (err) {
+      console.log(err);
+    }
+  }
+  async findAllPredefinedResponseByType(state: string) {
+    try {
+      const predefinedResponse = await this.predefinedResponseRepository.findBy(
+        {
+          state,
+          isActive: true,
+        }
+      );
       return predefinedResponse;
     } catch (err) {
       console.log(err);
@@ -73,14 +87,14 @@ export class ResponsesService {
     id: number,
     updatePredefinedResponseDto: UpdatePredefinedResponseDto
   ) {
-    const { content, responseType } = updatePredefinedResponseDto;
+    const { content, state } = updatePredefinedResponseDto;
     const predefinedResponse = await this.findOnePredefinedResponse(id);
     try {
       const newPredefinedResponse =
         await this.predefinedResponseRepository.preload({
           ...predefinedResponse,
           content,
-          responseType,
+          state,
           updatedAt: new Date(),
         });
       await this.predefinedResponseRepository.save(newPredefinedResponse);

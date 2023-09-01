@@ -1,8 +1,8 @@
 {
-  "name": "nest-base",
+  "name": "Web WhatsApp Bot",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Bot para whatsapp web",
+  "author": "David Espinoza",
   "private": true,
   "license": "MIT License",
   "scripts": {

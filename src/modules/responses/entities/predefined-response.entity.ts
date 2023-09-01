@@ -1,25 +1,30 @@
 // import { User } from 'src/modules/auth/entities/user.entity';
 import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
+// import { ConversationState } from 'src/modules/webhook/interfaces';
+
 @Entity('predefined_responses')
 export class PredefinedResponse {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
-  @Column('text', { array: true })
-  content: string[];
-
   @Column('text')
-  responseType: string; // (e.g., FAQs, atention hours, services)
+  content: string;
 
-  @Column('text', { nullable: true })
-  nextResponse: string; // (e.g., FAQs, atention hours, services)
+  @Column('text',{nullable:true})
+  state: string;
+
+  @Column('int', { nullable: true })
+  nextResponse: number; // (e.g., FAQs, atention hours, services)
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   updatedAt: Date;
+
+  @Column('bool', { default: false })
+  isActive: boolean;
 
   // category[financial, support] //maybe
 

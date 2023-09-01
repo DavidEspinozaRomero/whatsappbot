@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsDate,
   IsOptional,
   IsString,
@@ -9,10 +10,10 @@ import {
 export class CreatePredefinedResponseDto {
   @IsArray()
   @MinLength(1)
-  content: string[];
+  content: string;
 
   @IsString()
-  responseType: string; // (e.g., FAQs, atention hours, services, welcome)
+  state: string; // (e.g., FAQs, atention hours, services, welcome)
 
   @IsString()
   @IsOptional()
@@ -25,6 +26,10 @@ export class CreatePredefinedResponseDto {
   @IsDate()
   @IsOptional()
   updatedAt: Date;
+
+  @IsBoolean()
+  @IsOptional()
+  isActive: boolean;
 
   // @IsString()
   // sendAt: string;
