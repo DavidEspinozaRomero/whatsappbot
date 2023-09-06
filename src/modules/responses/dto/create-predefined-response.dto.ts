@@ -1,23 +1,27 @@
 import {
-  IsArray,
   IsBoolean,
   IsDate,
+  IsNumber,
   IsOptional,
   IsString,
   MinLength,
 } from 'class-validator';
 
 export class CreatePredefinedResponseDto {
-  @IsArray()
+  @IsString()
   @MinLength(1)
   content: string;
 
   @IsString()
-  state: string; // (e.g., FAQs, atention hours, services, welcome)
+  @IsOptional()
+  state: string;
 
   @IsString()
+  idAction: number;
+
+  @IsNumber()
   @IsOptional()
-  nextResponse: string; // (e.g., FAQs, atention hours, services, welcome)
+  nextResponse: number;
 
   @IsDate()
   @IsOptional()

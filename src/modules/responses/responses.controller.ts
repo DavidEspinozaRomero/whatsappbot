@@ -33,7 +33,7 @@ export class ResponsesController {
 
   @Get('predefined:id')
   findOnePredefined(@Param('id') id: string) {
-    return this.responsesService.findOnePredefinedResponse(+id);
+    return this.responsesService.findOnePredefinedResponseById(+id);
   }
 
   @Patch('predefined:id')

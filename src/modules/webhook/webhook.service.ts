@@ -17,7 +17,8 @@ import { randomUUID } from 'crypto';
 import { GroupsService } from '../groups/groups.service';
 import { Group } from '../groups/entities';
 import { ResponsesService } from '../responses/responses.service';
-import { ConversationState } from './interfaces';
+import { ConversationState, ActionMenu } from './interfaces';
+import { PredefinedResponse } from '../responses';
 
 // agregar usuario {user.id: { contact.id:'initial' }}
 // states: intro | serviceOption(FAQs,Services,BOT,AGENTE)
@@ -28,28 +29,9 @@ export class WebhookService {
   //#region variables
   private readonly logger = new Logger('ContactsService');
   client!: WAWebJS.Client;
-  conversationStates = ['start', 'identify', 'process', 'satisfaction', 'end'];
+  // conversationStates = ['start', 'identify', 'process', 'satisfaction', 'end'];
+  // actions = ['createGroup', 'predefinedResponse', 'BOT']
   contactConversationState = {};
-
-  // users = new Set();
-  // stateContact = new Map();
-  // users = {
-  //   // opt1
-  //   user1: {
-  //     states: [''],
-  //     stateContact1: '',
-  //     stateContact2: ''
-  //   },
-  //   // opt2
-  //   user2: {
-  //     states: [''],
-  //     stateContact1: '',
-  //     contact2: {
-  //       state: '',
-  //       groupState:''
-  //     }
-  //   },
-  // };
 
   //#endregion variables
 
@@ -154,9 +136,10 @@ export class WebhookService {
         isEnterprise
       );
 
-      //save messages in DB
       // TODO: voiceToText api
       // if (hasMedia) await this.#recordMedia(msg);
+
+      //save messages in DB
       this.#saveMessage(
         {
           content: body,
@@ -172,146 +155,173 @@ export class WebhookService {
       // check the stage of contact/client
       this.contactConversationState[contactDB.id] ??= ConversationState.start;
       console.log(this.contactConversationState[contactDB.id]);
-      switch (this.contactConversationState[contactDB.id]) {
-        case ConversationState.start:
-          try {
-            // welcome message, show menu options
-            const { id } =
-              await this.responsesService.findOnePredefinedResponseByType(
-                ConversationState.start
-              );
-            this.#handleChat(contactDB.cellphone, id);
-            this.contactConversationState[contactDB.id] =
-              ConversationState.identify;
-          } catch (err) {
-            console.log(err);
-          }
-          break;
-
-        // la persona ingresa una opcion del menu o no
-        case ConversationState.identify:
-          try {
-            // TODO: crear funcion para distinguir cuando crear un grupo/BOT/respuesta predefinida
-            // crea un grupo
-            if (body == 'AGENTE') {
-              this.contactConversationState[contactDB.id] = null;
-              const groupName = 'Soporte Técnico ' + randomUUID().split('-')[0];
-              const { gid } = await this.#createGroupWhit(groupName, contact);
-              const group = this.groupsService.findOneGroup(+gid);
-
-              let newGroup: Group;
-              if (!group) {
-                newGroup = await this.groupsService.createGroup({
-                  id: +gid,
-                  description: 'agente',
-                  groupMembers: [contactDB.id],
-                  groupName,
-                });
-
-                await this.groupsService.createGroupManagement(
-                  {
-                    permissions: 'all',
-                    status: 'active',
-                    role: 'admin',
-                    lastSeen: new Date(),
-                  },
-                  newGroup
-                );
-              }
-              return;
-              // const {}: ChatId = await this.client.getCommonGroups(gid)[0];
-              // const actualChatGroup = await this.client.getChatById(actualgroup);
-            }
-
-            // obtener el menu de opciones
-            const { content: rawMenu } =
-              await this.responsesService.findOnePredefinedResponseByType(
-                'menu'
-              );
-            const optionsMenu = [];
-            const menu = {};
-            for (const line of rawMenu.replaceAll('\r', '').split('\n')) {
-              const [key, value] = line.split(',');
-              optionsMenu.push(key);
-              menu[key] = value;
-            }
-
-            // invalid option
-            if (!optionsMenu.includes(body)) {
-              this.sendMessage({
-                cellphone: contactDB.cellphone,
-                content: 'Porfavor escriba el número del menu de opciones',
-              });
-              return;
-            }
-
-            // valid option (BOT/predefiened response)
-            const { id } =
-              await this.responsesService.findOnePredefinedResponseByType(
-                menu[body]
-              );
-            this.#handleChat(contactDB.cellphone, id);
-
-            //ingresa Soporte se activa el bot
-
-            // console.log('¿En qué puedo ayudarte? Por favor, cuéntame más sobre tu consulta.');
-            this.contactConversationState[contactDB.id] =
-              ConversationState.process;
-          } catch (err) {
-            console.log(err);
-          }
-          break;
-
-        // cuando ingreso bot de soporte
-        case ConversationState.process:
-          try {
-            // se queda en esta fase hasta a ver solucionado la pregunta
-            // console.log('Procesando tu consulta...');
-
-            // Lógica de procesamiento aquí
-            // agregar el BOT
-
-            // console.log('Respuesta o acción proporcionada.');
-
-            // crear bucle hasta satisfacer la necesidad
-            this.contactConversationState[contactDB.id] =
-              ConversationState.satisfaction;
-          } catch (err) {
-            console.log(err);
-          }
-
-          break;
-
-        case ConversationState.satisfaction:
-          try {
-            // console.log('¿Fue útil la respuesta? (Sí/No)');
-            this.contactConversationState[contactDB.id] = ConversationState.end;
-          } catch (err) {
-            console.log(err);
-          }
-          break;
-
-        case ConversationState.end:
-          try {
-            // console.log('¡Gracias por usar nuestro servicio! ¡Hasta luego!');
-            this.contactConversationState[contactDB.id] = null;
-          } catch (err) {
-            console.log(err);
-          }
-          break;
-      }
+      this.#chatFlow(contactDB, body, contact);
     } catch (err) {
       this.handleExceptions(err);
     }
   }
+
+  async #chatFlow(contactDB: Contact, body: string, contact: WAWebJS.Contact) {
+    const rawMenu = await this.responsesService.findMenu();
+
+    switch (this.contactConversationState[contactDB.id]) {
+      case ConversationState.start:
+        try {
+          const { id } =
+            await this.responsesService.findOnePredefinedResponseByState(
+              ConversationState.start
+            );
+          await this.#handleChat(contactDB.cellphone, id);
+
+          const response = rawMenu
+            .map(({ order, content }) => `${order} ${content}`)
+            .join('\n');
+
+          this.sendMessage({
+            cellphone: contactDB.cellphone,
+            content: response,
+          });
+
+          this.contactConversationState[contactDB.id] =
+            ConversationState.identify;
+        } catch (err) {
+          console.log(err);
+        }
+        break;
+
+      // la persona ingresa una opcion del menu o no
+      case ConversationState.identify:
+        try {
+          // TODO: crear funcion para distinguir cuando: crear un grupo/BOT/respuesta predefinida
+
+          // obtener el menu de opciones
+
+          const optionsMenu = rawMenu.map((option) => {
+            return option.order;
+          });
+          console.log(rawMenu);
+
+          if (!optionsMenu.includes(+body)) {
+            this.sendMessage({
+              cellphone: contactDB.cellphone,
+              content: 'Porfavor escriba el número del menu de opciones',
+            });
+            return;
+          }
+
+          const { idPredefinedResponse } = rawMenu.find(
+            (res) => res.order == +body
+          );
+
+          await this.handleAction(idPredefinedResponse, contactDB, contact);
+        } catch (err) {
+          console.log(err);
+        }
+        break;
+
+      case ConversationState.process:
+        try {
+          // se queda en esta fase hasta a ver solucionado la pregunta
+          // console.log('Procesando tu consulta...');
+
+          // Lógica de procesamiento aquí
+          // agregar el BOT
+
+          // console.log('Respuesta o acción proporcionada.');
+
+          // crear bucle hasta satisfacer la necesidad
+          this.contactConversationState[contactDB.id] =
+            ConversationState.satisfaction;
+        } catch (err) {
+          console.log(err);
+        }
+
+        break;
+
+      case ConversationState.satisfaction:
+        try {
+          // console.log('¿Fue útil la respuesta? (Sí/No)');
+          this.contactConversationState[contactDB.id] = ConversationState.end;
+        } catch (err) {
+          console.log(err);
+        }
+        break;
+
+      case ConversationState.end:
+        try {
+          // console.log('¡Gracias por usar nuestro servicio! ¡Hasta luego!');
+          this.contactConversationState[contactDB.id] = null;
+        } catch (err) {
+          console.log(err);
+        }
+        break;
+    }
+  }
+  async handleAction(
+    predefined: PredefinedResponse,
+    contactDB: Contact,
+    contact: WAWebJS.Contact
+  ) {
+    const { actionType, id } = predefined;
+    const { content: action } = actionType;
+    switch (true) {
+      case ActionMenu.createGroup == action:
+        // crea un grupo
+        // if (body == 'AGENTE') {
+        this.contactConversationState[contactDB.id] = null;
+        const groupName = 'Soporte Técnico ' + randomUUID().split('-')[0];
+        const { gid } = await this.#createGroupWhit(groupName, contact);
+        const group = this.groupsService.findOneGroup(+gid);
+
+        let newGroup: Group;
+        if (!group) {
+          newGroup = await this.groupsService.createGroup({
+            id: +gid,
+            description: 'agente',
+            groupMembers: [contactDB.id],
+            groupName,
+          });
+
+          await this.groupsService.createGroupManagement(
+            {
+              permissions: 'all',
+              status: 'active',
+              role: 'admin',
+              lastSeen: new Date(),
+            },
+            newGroup
+          );
+        }
+        return;
+        //   // const {}: ChatId = await this.client.getCommonGroups(gid)[0];
+        //   // const actualChatGroup = await this.client.getChatById(actualgroup);
+        // }
+        break;
+
+      case ActionMenu.response == action:
+        // const { id } =
+        //   await this.responsesService.findOnePredefinedResponseByState();
+        this.#handleChat(contactDB.cellphone, id);
+        break;
+
+      case ActionMenu.BOT == action:
+        // console.log('¿En qué puedo ayudarte? Por favor, cuéntame más sobre tu consulta.');
+        this.contactConversationState[contactDB.id] = ConversationState.process;
+        break;
+
+      default:
+        break;
+    }
+  }
+
   async #handleChat(cellphone: string, responseId: number) {
     const { content, nextResponse } =
-      await this.responsesService.findOnePredefinedResponse(responseId);
-    const response: string = !isNaN(+content[0])
-      ? content.replaceAll(',', ' ')
-      : content;
+      await this.responsesService.findOnePredefinedResponseById(responseId);
+    // const response: string = !isNaN(+content[0])
+    //   ? content.replaceAll(',', ' ')
+    //   : content;
 
-    this.sendMessage({ cellphone, content: response });
+    this.sendMessage({ cellphone, content });
 
     if (nextResponse) {
       this.#handleChat(cellphone, nextResponse);

@@ -1,19 +1,12 @@
 import {
   Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
 } from '@nestjs/common';
 import { MessagesService } from './messages.service';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
-import { Auth, GetUser } from '../auth/decorators';
-import { User } from '../auth/entities/user.entity';
-import { PaginationDTO } from '../common/dto/pagination.dto';
-import { ValidRoles } from '../auth/interfaces/valid-roles';
+// import { CreateMessageDto, UpdateMessageDto } from './dto';
+// import { Auth, GetUser } from '../auth/decorators';
+// import { User } from '../auth/entities/user.entity';
+// import { PaginationDTO } from '../common/dto/pagination.dto';
+// import { ValidRoles } from '../auth/interfaces/valid-roles';
 
 @Controller('messages')
 export class MessagesController {

@@ -6,13 +6,13 @@ import {
 } from '@nestjs/common/exceptions';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { Not, Repository } from 'typeorm';
-import { Client, MessageMedia } from 'whatsapp-web.js';
+import { Repository } from 'typeorm';
+import { Client } from 'whatsapp-web.js';
 
 // import { PaginationDTO } from '../common/dto/pagination.dto';
 // import { User } from '../auth/entities/user.entity';
 import { Message } from './entities/message.entity';
-import { CreateMessageDto, UpdateMessageDto } from './dto';
+import { CreateMessageDto } from './dto';
 // import { TypeMessage } from './entities/typeMessage.entity';
 // import { Category, TypeCategory } from './entities/category.entity';
 // import { initialData } from '../seed/data/initialData';
@@ -142,7 +142,7 @@ export class MessagesService {
       this.handleExceptions(err);
     }
   }
-  
+
   // async #responseMessageByState(client: Client, msg: WAWebJS.Message) {
   //   // const { from, to, body, reply, hasMedia } = msg;
   //   // let { data } = await this.getDBQuestionAnswer(user);

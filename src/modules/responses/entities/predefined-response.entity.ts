@@ -1,5 +1,6 @@
 // import { User } from 'src/modules/auth/entities/user.entity';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Action } from 'src/modules/responses/entities/action.entity';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 // import { ConversationState } from 'src/modules/webhook/interfaces';
 
@@ -8,11 +9,11 @@ export class PredefinedResponse {
   @PrimaryGeneratedColumn('increment')
   id: number;
 
+  @Column('text', { nullable: true })
+  state: string;
+
   @Column('text')
   content: string;
-
-  @Column('text',{nullable:true})
-  state: string;
 
   @Column('int', { nullable: true })
   nextResponse: number; // (e.g., FAQs, atention hours, services)
@@ -26,9 +27,9 @@ export class PredefinedResponse {
   @Column('bool', { default: false })
   isActive: boolean;
 
-  // category[financial, support] //maybe
-
-  // Realtions
+  // Relations
+  @ManyToOne(() => Action, (action) => action.id, { nullable: true })
+  actionType: Action; //  (User ID who created the response)
 
   // @ManyToOne(() => User, (user) => user.predefinedResponse)
   // createdBy: User; //  (User ID who created the response)
