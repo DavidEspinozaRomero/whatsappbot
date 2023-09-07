@@ -27,6 +27,9 @@ export class GroupManagement {
   @Column('text')
   permissions: string; // (Array of allowed actions)
 
+  @Column('int', { nullable: true })
+  rate: number; // 1-5
+
   // Relations
   @ManyToOne(() => Group, (group) => group.management)
   group: Group; // (Foreign Key)

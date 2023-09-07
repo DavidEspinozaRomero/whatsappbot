@@ -17,7 +17,7 @@ export class CreatePredefinedResponseDto {
   state: string;
 
   @IsString()
-  idAction: number;
+  actionId: number;
 
   @IsNumber()
   @IsOptional()

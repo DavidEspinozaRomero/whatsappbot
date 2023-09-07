@@ -19,9 +19,6 @@ export class Group {
   @CreateDateColumn({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
 
-  @Column('int', { nullable: true })
-  rate: number; // (e.g., active, inactive)
-
   // isPrivate (Boolean)
   // isAdmin (Array of User IDs with admin privileges)
 

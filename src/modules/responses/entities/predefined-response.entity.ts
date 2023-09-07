@@ -1,6 +1,7 @@
+import { Column, Entity,  PrimaryGeneratedColumn } from 'typeorm';
+
 // import { User } from 'src/modules/auth/entities/user.entity';
-import { Action } from 'src/modules/responses/entities/action.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+// import { Action } from 'src/modules/responses/entities/action.entity';
 
 // import { ConversationState } from 'src/modules/webhook/interfaces';
 
@@ -16,7 +17,7 @@ export class PredefinedResponse {
   content: string;
 
   @Column('int', { nullable: true })
-  nextResponse: number; // (e.g., FAQs, atention hours, services)
+  nextResponse: number;
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   createdAt: Date;
@@ -28,8 +29,10 @@ export class PredefinedResponse {
   isActive: boolean;
 
   // Relations
-  @ManyToOne(() => Action, (action) => action.id, { nullable: true })
-  actionType: Action; //  (User ID who created the response)
+  // @ManyToOne(() => Action, (action) => action.predefinedResponse, {
+  //   nullable: true,
+  // })
+  // action: Action;
 
   // @ManyToOne(() => User, (user) => user.predefinedResponse)
   // createdBy: User; //  (User ID who created the response)

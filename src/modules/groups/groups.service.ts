@@ -23,7 +23,7 @@ export class GroupsService {
         description,
         groupName,
         id,
-        ...groupMembers,
+        groupMembers,
       });
 
       await this.groupRepository.save(newGroup);
@@ -60,7 +60,7 @@ export class GroupsService {
 
   async findOneGroup(id: number) {
     try {
-      const group = await this.groupRepository.findBy({ id });
+      const group = await this.groupRepository.findOneBy({ id });
       return group;
     } catch (err) {
       console.log(err);

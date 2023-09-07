@@ -1,6 +1,7 @@
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+
 // import { User } from 'src/modules/auth/entities/user.entity';
-import { PredefinedResponse } from 'src/modules/responses/entities';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+// import { PredefinedResponse } from 'src/modules/responses/entities';
 
 @Entity('action')
 export class Action {
@@ -15,8 +16,11 @@ export class Action {
 
   // Relations
 
-  @OneToMany(() => PredefinedResponse, (predefinedResponse) => predefinedResponse.actionType)
-  idPredefinedResponse: PredefinedResponse; //  (User ID who created the response)
+  // @OneToMany(
+  //   () => PredefinedResponse,
+  //   (predefinedResponse) => predefinedResponse.action
+  // )
+  // predefinedResponse: PredefinedResponse;
 
   // @ManyToOne(() => User, (user) => user.predefinedResponse)
   // createdBy: User; //  (User ID who created the response)

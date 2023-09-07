@@ -18,7 +18,7 @@ import { GroupsService } from '../groups/groups.service';
 import { Group } from '../groups/entities';
 import { ResponsesService } from '../responses/responses.service';
 import { ConversationState, ActionMenu } from './interfaces';
-import { PredefinedResponse } from '../responses';
+import { Menu, PredefinedResponse } from '../responses';
 
 // agregar usuario {user.id: { contact.id:'initial' }}
 // states: intro | serviceOption(FAQs,Services,BOT,AGENTE)
@@ -28,11 +28,12 @@ import { PredefinedResponse } from '../responses';
 export class WebhookService {
   //#region variables
   private readonly logger = new Logger('ContactsService');
-  client!: WAWebJS.Client;
-  // conversationStates = ['start', 'identify', 'process', 'satisfaction', 'end'];
-  // actions = ['createGroup', 'predefinedResponse', 'BOT']
-  contactConversationState = {};
+  private client!: WAWebJS.Client;
 
+  private contactConversationState = {};
+  private actionsMenu;
+
+  // users {actionsMenu:{}, contactConversationState:{}}
   //#endregion variables
 
   constructor(
@@ -41,13 +42,12 @@ export class WebhookService {
     private readonly groupsService: GroupsService,
     private readonly responsesService: ResponsesService
   ) {
-    this.#conectWhitWhatsAppWeb();
+    this.#initializeWhatsApp();
   }
 
   //#region Whatsapp
-  async #conectWhitWhatsAppWeb() {
-    console.log('???');
-    this.client = await this.#createClient();
+  async #initializeWhatsApp() {
+    this.client = await this.#createWhatsAppClient();
     try {
       this.client.on('authenticated', (session) => {
         console.log('authenticated', session);
@@ -56,11 +56,14 @@ export class WebhookService {
       this.client.on('ready', async () => {
         console.log('ready!');
         // agregar al objeto users el user
+        // const contacts = await this.client.getContacts();
+        // console.log(contacts);
+
+        // this.client.getContactById()
       });
 
-      this.client.on('group_join', async (args: WAWebJS.GroupChat) => {
+      this.client.on('group_join', async (args: any) => {
         console.log('group join');
-        args.sendMessage('test group message');
         console.log(args);
         // this.handleGroup(group);
       });
@@ -89,7 +92,7 @@ export class WebhookService {
     }
   }
 
-  async #createClient() {
+  async #createWhatsAppClient() {
     try {
       const client = new Client({
         authStrategy: new LocalAuth({
@@ -163,6 +166,7 @@ export class WebhookService {
 
   async #chatFlow(contactDB: Contact, body: string, contact: WAWebJS.Contact) {
     const rawMenu = await this.responsesService.findMenu();
+    console.log(rawMenu);
 
     switch (this.contactConversationState[contactDB.id]) {
       case ConversationState.start:
@@ -173,10 +177,7 @@ export class WebhookService {
             );
           await this.#handleChat(contactDB.cellphone, id);
 
-          const response = rawMenu
-            .map(({ order, content }) => `${order} ${content}`)
-            .join('\n');
-
+          const response = this.#buildMenuResponse(rawMenu);
           this.sendMessage({
             cellphone: contactDB.cellphone,
             content: response,
@@ -194,26 +195,111 @@ export class WebhookService {
         try {
           // TODO: crear funcion para distinguir cuando: crear un grupo/BOT/respuesta predefinida
 
-          // obtener el menu de opciones
+          // TODO: crear funcion para distinguir cuando: crear un grupo/BOT/respuesta predefinida
 
-          const optionsMenu = rawMenu.map((option) => {
-            return option.order;
-          });
-          console.log(rawMenu);
-
+          const optionsMenu = rawMenu.map((val) => val.order);
           if (!optionsMenu.includes(+body)) {
             this.sendMessage({
               cellphone: contactDB.cellphone,
-              content: 'Porfavor escriba el número del menu de opciones',
+              content:
+                'Opción no válida. Por favor, escriba el "número" del menu de opciones',
             });
             return;
           }
 
-          const { idPredefinedResponse } = rawMenu.find(
-            (res) => res.order == +body
+          const { actionId, responseId } = this.#findOptionSelected(
+            rawMenu,
+            body
           );
+          const selectedAction = this.actionsMenu[actionId];
 
-          await this.handleAction(idPredefinedResponse, contactDB, contact);
+          if (!selectedAction) {
+            this.sendMessage({
+              cellphone: contactDB.cellphone,
+              content: `Error: esta opcion aun no esta funcionando`,
+            });
+            return;
+          }
+
+          switch (selectedAction) {
+            case 'createGroup':
+              // Lógica para la acción 'createGroup'
+              console.log(
+                `Realizando la acción 'createGroup' para el contacto {contactId} en la tienda {shop}`
+              );
+              try {
+                this.contactConversationState[contactDB.id] = null;
+                // let { groupName, description, groupMembers } =
+                //   await this.groupsService.findOneGroup(responseId);
+
+                const groupName = 'Soporte-' + randomUUID().split('-')[0];
+                const { gid } = await this.#createGroupWhit(groupName, contact);
+                const group = this.groupsService.findOneGroup(+gid);
+
+                let newGroup: Group;
+                if (!group) {
+                  newGroup = await this.groupsService.createGroup({
+                    id: +gid,
+                    description: 'agente',
+                    groupMembers: [contactDB.id],
+                    groupName,
+                  });
+
+                  await this.groupsService.createGroupManagement(
+                    {
+                      permissions: 'all',
+                      status: 'active',
+                      role: 'admin',
+                      lastSeen: new Date(),
+                    },
+                    newGroup
+                  );
+                }
+
+                // const {}: ChatId = await this.client.getCommonGroups(gid)[0];
+                // const actualChatGroup = await this.client.getChatById(actualgroup);
+              } catch (err) {
+                console.log(err);
+              }
+              break;
+
+            case 'predefinedResponse':
+              // Lógica para la acción 'predefinedResponse'
+              try {
+                this.#handleChat(contactDB.cellphone, responseId);
+              } catch (err) {
+                console.log(err);
+              }
+
+              break;
+
+            case 'BOT':
+              // Lógica para la acción 'BOT'
+              console.log(
+                `Realizando la acción 'BOT' para el contacto {contactId} en la tienda {shop}`
+              );
+              try {
+                // const { content: prompt } =
+                //   await this.responsesService.findOnePredefinedResponseById(
+                //     responseId
+                //   );
+
+
+                this.contactConversationState[contactDB.id] =
+                  ConversationState.process;
+              } catch (err) {
+                console.log(err);
+              }
+              break;
+
+            default:
+              console.log(
+                'Opción no válida. Por favor, selecciona una opción válida.'
+              );
+              break;
+          }
+
+          // await this.handleAction(predefinedResponse, contactDB, contact);
         } catch (err) {
           console.log(err);
         }
@@ -257,63 +343,35 @@ export class WebhookService {
         break;
     }
   }
-  async handleAction(
-    predefined: PredefinedResponse,
-    contactDB: Contact,
-    contact: WAWebJS.Contact
-  ) {
-    const { actionType, id } = predefined;
-    const { content: action } = actionType;
-    switch (true) {
-      case ActionMenu.createGroup == action:
-        // crea un grupo
-        // if (body == 'AGENTE') {
-        this.contactConversationState[contactDB.id] = null;
-        const groupName = 'Soporte Técnico ' + randomUUID().split('-')[0];
-        const { gid } = await this.#createGroupWhit(groupName, contact);
-        const group = this.groupsService.findOneGroup(+gid);
 
-        let newGroup: Group;
-        if (!group) {
-          newGroup = await this.groupsService.createGroup({
-            id: +gid,
-            description: 'agente',
-            groupMembers: [contactDB.id],
-            groupName,
-          });
+  #buildMenuResponse(rawMenu: Menu[]): string {
+    // Build the menu response based on the rawMenu data
+    // Sort and format the menu options
+    const formattedMenu = rawMenu
+      .sort((a, b) => a.order - b.order)
+      .map(({ order, content }) => `${order} ${content}`)
+      .join('\n');
+    return formattedMenu;
+  }
+  #findOptionSelected(rawMenu: Menu[], text: string) {
+    // Extract the menu options (order) from the rawMenu data
+    return rawMenu.find(({ order }) => order == +text);
+  }
+  async handleAction(contactDB: Contact, contact: WAWebJS.Contact) {
+    this.actionsMenu ??= await this.getActions();
 
-          await this.groupsService.createGroupManagement(
-            {
-              permissions: 'all',
-              status: 'active',
-              role: 'admin',
-              lastSeen: new Date(),
-            },
-            newGroup
-          );
-        }
-        return;
-        //   // const {}: ChatId = await this.client.getCommonGroups(gid)[0];
-        //   // const actualChatGroup = await this.client.getChatById(actualgroup);
-        // }
-        break;
-
-      case ActionMenu.response == action:
-        // const { id } =
-        //   await this.responsesService.findOnePredefinedResponseByState();
-        this.#handleChat(contactDB.cellphone, id);
-        break;
-
-      case ActionMenu.BOT == action:
-        // console.log('¿En qué puedo ayudarte? Por favor, cuéntame más sobre tu consulta.');
-        this.contactConversationState[contactDB.id] = ConversationState.process;
-        break;
-
-      default:
-        break;
-    }
+    console.log(this.actionsMenu, this.actionsMenu[actionId]);
   }
 
+  async getActions() {
+    const rawActions = await this.responsesService.findActions();
+
+    const actions = {};
+    rawActions.map(({ id, content }) => {
+      actions[id] = content;
+    });
+    return actions;
+  }
   async #handleChat(cellphone: string, responseId: number) {
     const { content, nextResponse } =
       await this.responsesService.findOnePredefinedResponseById(responseId);
@@ -327,7 +385,6 @@ export class WebhookService {
       this.#handleChat(cellphone, nextResponse);
       return;
     }
-    // this.stateContact[contactId] = null;
   }
 
   // #handleGroupChat(cellphone: string) {
@@ -422,37 +479,85 @@ export class WebhookService {
 //   output: process.stdout,
 // });
 
-// let conversationState = 'start';
+// const actionsMenu = {
+//   1: 'createGroup',
+//   2: 'predefinedResponse',
+//   3: 'BOT',
+// }
+// const conversationStates = {
+//   start: 'start',
+//   identify: 'identify',
+//   process: 'process',
+//   satisfaction: 'satisfaction',
+//   end: 'end',
+// }
+
+// let shops = {
+//   shop1: {
+
+//     menu: {
+//       1: 'Servicios',
+//       2: 'Bot Soporte',
+//       3: 'Agente',
+//     },
+//     contacts: {
+//       contact1: { contactConversationState: undefined },
+//       contact2: { contactConversationState: 'start' },
+//       contact3: { contactConversationState: 'identify' },
+//     },
+//   },
+//   shop2: {
+//     conversationStates: {
+//       start: 'start',
+//       identify: 'identify',
+//       process: 'process',
+//       satisfaction: 'satisfaction',
+//       end: 'end',
+//     },
+//     menu: {
+//       1: 'Bot Soporte',
+//       2: 'Agente',
+//       3: 'Servicios',
+//     },
+//     contacts: {
+//       contact1: { contactConversationState: 'start' },
+//       contact2: { contactConversationState: 'identify' },
+//       contact3: { contactConversationState: undefined },
+//     },
+//   },
+// };
+// let conversationState ??= conversationStates.start;
 
 // function processInput(input) {
-//   switch (conversationState) {
-//     case 'start':
+
+//   switch (contactConversationState) {
+//     case conversationStates.start:
 //       console.log('¡Hola! Soy un chatbot de atención al cliente.');
 //       console.log("Para soporte técnico, escribe 'soporte'.");
 //       console.log("Para consultas sobre facturación, escribe 'facturacion'.");
-//       conversationState = 'identify';
+//       conversationState = conversationStates.identify;
 //       break;
 
-//     case 'identify':
+//     case conversationStates.identify:
 //       console.log(
 //         '¿En qué puedo ayudarte? Por favor, cuéntame más sobre tu consulta.'
 //       );
-//       conversationState = 'process';
+//       conversationState = conversationStates.process;
 //       break;
 
-//     case 'process':
+//     case conversationStates.process:
 //       console.log('Procesando tu consulta...');
 //       // Lógica de procesamiento aquí
 //       console.log('Respuesta o acción proporcionada.');
-//       conversationState = 'satisfaction';
+//       conversationState = conversationStates.satisfaction;
 //       break;
 
-//     case 'satisfaction':
+//     case conversationStates.satisfaction:
 //       console.log('¿Fue útil la respuesta? (Sí/No)');
-//       conversationState = 'end';
+//       conversationState = conversationStates.end;
 //       break;
 
-//     case 'end':
+//     case conversationStates.end:
 //       console.log('¡Gracias por usar nuestro servicio! ¡Hasta luego!');
 //       rl.close();
 //       break;

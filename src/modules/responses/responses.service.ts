@@ -27,14 +27,13 @@ export class ResponsesService {
   async createPredefinedResponse(
     createPredefinedResponseDto: CreatePredefinedResponseDto
   ) {
-    const { content, idAction, state } = createPredefinedResponseDto;
+    const { content, actionId, state } = createPredefinedResponseDto;
 
     try {
-      const action = await this.actionRepository.findOneBy({ id: idAction });
       const newPredefinedResponse = this.predefinedResponseRepository.create({
         content,
         state,
-        actionType: action,
+        actionId,
       });
       await this.predefinedResponseRepository.save(newPredefinedResponse);
       return newPredefinedResponse;
@@ -45,13 +44,13 @@ export class ResponsesService {
   async createMenu(createMenuDto: CreateMenuDto) {
     const { order, content, idPredefinedResponse } = createMenuDto;
     try {
-      const predefined = await this.findOnePredefinedResponseById(
+      const predefinedResponse = await this.findOnePredefinedResponseById(
         idPredefinedResponse
       );
       const newMenu = this.menuRepository.create({
         order,
         content,
-        idPredefinedResponse: predefined,
+        predefinedResponse,
       });
       await this.menuRepository.save(newMenu);
       return newMenu;
@@ -93,16 +92,23 @@ export class ResponsesService {
       console.log(err);
     }
   }
-  async findAllPredefinedResponseByAction(idAction: number) {
+  // async findAllPredefinedResponseByAction(actionId: number) {
+  //   try {
+  //     const predefinedResponse = await this.predefinedResponseRepository.findBy(
+  //       {
+  //         actionId,
+  //         isActive: true,
+  //       }
+  //     );
+  //     return predefinedResponse;
+  //   } catch (err) {
+  //     console.log(err);
+  //   }
+  // }
+  async findActions() {
     try {
-      const action = await this.actionRepository.findOneBy({ id: idAction });
-      const predefinedResponse = await this.predefinedResponseRepository.findBy(
-        {
-          actionType: action,
-          isActive: true,
-        }
-      );
-      return predefinedResponse;
+      const actions = await this.actionRepository.find();
+      return actions;
     } catch (err) {
       console.log(err);
     }
@@ -120,16 +126,15 @@ export class ResponsesService {
     id: number,
     updatePredefinedResponseDto: UpdatePredefinedResponseDto
   ) {
-    const { content, idAction, state } = updatePredefinedResponseDto;
+    const { content, actionId, state } = updatePredefinedResponseDto;
     try {
-      const action = await this.actionRepository.findOneBy({ id: idAction });
       const predefinedResponse = await this.findOnePredefinedResponseById(id);
       const newPredefinedResponse =
         await this.predefinedResponseRepository.preload({
           ...predefinedResponse,
           state,
           content,
-          actionType: action,
+          actionId: actionId,
           updatedAt: new Date(),
         });
       await this.predefinedResponseRepository.save(newPredefinedResponse);
