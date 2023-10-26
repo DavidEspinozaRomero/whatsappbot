@@ -20,20 +20,19 @@ export class ResponsesService {
     @InjectRepository(Menu)
     private readonly menuRepository: Repository<Menu>
   ) {}
-  // region variables
-  // endregion variables
+  // #region variables
+  // #endregion variables
 
-  // region methods
+  // #region methods
   async createPredefinedResponse(
     createPredefinedResponseDto: CreatePredefinedResponseDto
   ) {
-    const { content, actionId, state } = createPredefinedResponseDto;
+    const { content, state } = createPredefinedResponseDto;
 
     try {
       const newPredefinedResponse = this.predefinedResponseRepository.create({
         content,
         state,
-        actionId,
       });
       await this.predefinedResponseRepository.save(newPredefinedResponse);
       return newPredefinedResponse;
@@ -42,15 +41,14 @@ export class ResponsesService {
     }
   }
   async createMenu(createMenuDto: CreateMenuDto) {
-    const { order, content, idPredefinedResponse } = createMenuDto;
+    const { order, content } = createMenuDto;
     try {
-      const predefinedResponse = await this.findOnePredefinedResponseById(
-        idPredefinedResponse
-      );
+      // const predefinedResponse = await this.findOnePredefinedResponseById(
+      //   idPredefinedResponse
+      // );
       const newMenu = this.menuRepository.create({
         order,
         content,
-        predefinedResponse,
       });
       await this.menuRepository.save(newMenu);
       return newMenu;
@@ -126,7 +124,7 @@ export class ResponsesService {
     id: number,
     updatePredefinedResponseDto: UpdatePredefinedResponseDto
   ) {
-    const { content, actionId, state } = updatePredefinedResponseDto;
+    const { content, state } = updatePredefinedResponseDto;
     try {
       const predefinedResponse = await this.findOnePredefinedResponseById(id);
       const newPredefinedResponse =
@@ -134,7 +132,6 @@ export class ResponsesService {
           ...predefinedResponse,
           state,
           content,
-          actionId: actionId,
           updatedAt: new Date(),
         });
       await this.predefinedResponseRepository.save(newPredefinedResponse);
@@ -173,5 +170,5 @@ export class ResponsesService {
   // remove(id: number) {
   //   return `This action removes a #${id} response`;
   // }
-  // endregion methods
+  // #endregion methods
 }

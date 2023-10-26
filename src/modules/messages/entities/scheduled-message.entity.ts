@@ -2,17 +2,15 @@ import {
   Column,
   Entity,
   // JoinColumn,
-  ManyToOne,
+  // ManyToOne,
   // OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-import { Contact } from '../../contacts/entities/contact.entity';
-// import { Response } from '../../responses/entities/response.entity';
+// import { Contact } from '../../contacts/entities/contact.entity';
 // import { User } from '../../auth/entities/user.entity';
 
-
-@Entity('messages')
+@Entity('scheduledMessages')
 export class ScheduledMessage {
   //#region Columns
   @PrimaryGeneratedColumn('increment')
@@ -22,24 +20,38 @@ export class ScheduledMessage {
   content: string;
 
   @Column('bool', { default: false })
-  fromMe: boolean;
-  @Column('bool')
-  hasMedia: boolean;
+  frecuency: boolean; // frequency [Single, Continuous]
 
   @Column('text', { default: 'n/a' })
-  deviceType: string;
-
-  @Column('text', { default: 'n/a' })
-  type: string;
+  type: string; // (e.g., notification, reminder)
 
   @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
-  send_at: Date;
+  scheduledTime: Date; // (Date and time when the message should be sent)
+
+  @Column('bool', { default: true })
+  isActive: boolean;
+
+  // @Column('bool')
+  // hasMedia: boolean;
+  // @Column('text')
+  // mediaId: string;
+
+  // @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  // createdAt: Date;
+  // @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+  // updatedAt: Date;
+
+  // @Column('text', { array: true })
+  // recipient: string[]; // (contactsID)
+  @Column('text')
+  recipient: string; // (contactID)
 
   //#endregion Columns
 
   //#region Relations
-  @ManyToOne(() => Contact, (contact) => contact.message)
-  contact: Contact;
+  // createdBy (User ID who scheduled the message)
+  // @ManyToOne(() => User, (user) => user.id)
+  // contact: User;
 
   // @OneToOne(() => Response)
   // @JoinColumn()

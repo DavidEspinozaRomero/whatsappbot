@@ -8,17 +8,22 @@ import WAWebJS, { Client, LocalAuth } from 'whatsapp-web.js';
 import * as qrcode from 'qrcode-terminal';
 import * as fs from 'fs';
 import * as qr from 'qr-image';
+import { randomUUID } from 'crypto';
+import { scheduleJob } from 'node-schedule';
 
 import { ContactsService } from '../contacts/contacts.service';
-import { CreateMessageDto, MessagesService } from '../messages';
-import { Contact } from '../contacts/entities/contact.entity';
-import { SendMessageDto, SendMessageToContactDto } from './dto';
-import { randomUUID } from 'crypto';
-import { GroupsService } from '../groups/groups.service';
-import { Group } from '../groups/entities';
 import { ResponsesService } from '../responses/responses.service';
+import { GroupsService } from '../groups/groups.service';
+import {
+  CreateMessageDto,
+  MessagesService,
+  ScheduledMessage,
+} from '../messages';
+import { SendMessageDto, SendMessageToContactDto } from './dto';
 import { ConversationState, ActionMenu } from './interfaces';
-import { Menu, PredefinedResponse } from '../responses';
+import { Contact } from '../contacts/entities/contact.entity';
+import { Group } from '../groups/entities';
+import { Menu } from '../responses';
 
 // agregar usuario {user.id: { contact.id:'initial' }}
 // states: intro | serviceOption(FAQs,Services,BOT,AGENTE)
@@ -31,9 +36,11 @@ export class WebhookService {
   private client!: WAWebJS.Client;
 
   private contactConversationState = {};
-  private actionsMenu;
+  private actionsMenu: ActionMenu;
+  // private scheduledMessages: ScheduledMessage[][];
+  private scheduledMessages;
 
-  // users {actionsMenu:{}, contactConversationState:{}}
+  // users {actionsMenu:{}, contactConversationState:{}, scheduledMessages:{}}
   //#endregion variables
 
   constructor(
@@ -53,13 +60,14 @@ export class WebhookService {
         console.log('authenticated', session);
       });
 
-      this.client.on('ready', async () => {
+      this.client.on('ready', () => {
         console.log('ready!');
         // agregar al objeto users el user
         // const contacts = await this.client.getContacts();
         // console.log(contacts);
-
         // this.client.getContactById()
+
+        this.#handleScheduledMessages();
       });
 
       this.client.on('group_join', async (args: any) => {
@@ -113,6 +121,31 @@ export class WebhookService {
   // TODO: agregar metodo para almacenar media
   // #storageMedia() {}
 
+  #handleScheduledMessages() {
+    // const cronHour = '0 * * * *';
+    scheduleJob('* * * * *', async () => {
+      const scheduledMessages =
+        await this.messagesService.getScheduledMessagesByRangeTime();
+      const { single, continouos } = scheduledMessages;
+      if (single) {
+        this.#scheduleMessages(single);
+      }
+      if (continouos) {
+        this.#scheduleMessages(continouos);
+      }
+    });
+  }
+
+  #scheduleMessages(list: ScheduledMessage[]) {
+    list.forEach(({ content, scheduledTime, recipient, frecuency, id }) => {
+      scheduleJob(scheduledTime, async () => {
+        await this.sendMessageToContact({ id: +recipient, content });
+        if (frecuency) return;
+        this.messagesService.desactivateScheduledMessage(id);
+      });
+    });
+  }
+
   // TODO: agregar metodo para diferenciar cuando enviar mensajes
   async handleMessage(msg: WAWebJS.Message) {
     const { from, body, hasMedia, fromMe, deviceType, type, broadcast } = msg;
@@ -156,15 +189,17 @@ export class WebhookService {
       );
 
       // check the stage of contact/client
-      this.contactConversationState[contactDB.id] ??= ConversationState.start;
-      console.log(this.contactConversationState[contactDB.id]);
-      this.#chatFlow(contactDB, body, contact);
+      // this.contactConversationState[contactDB.id] ??= ConversationState.start;
+      // console.log(this.contactConversationState[contactDB.id]);
+      // this.#chatFlow(contactDB, body, contact);
     } catch (err) {
       this.handleExceptions(err);
     }
   }
 
   async #chatFlow(contactDB: Contact, body: string, contact: WAWebJS.Contact) {
+    console.log(contact);
+
     const rawMenu = await this.responsesService.findMenu();
     console.log(rawMenu);
 
@@ -232,29 +267,29 @@ export class WebhookService {
                 // let { groupName, description, groupMembers } =
                 //   await this.groupsService.findOneGroup(responseId);
 
-                const groupName = 'Soporte-' + randomUUID().split('-')[0];
-                const { gid } = await this.#createGroupWhit(groupName, contact);
-                const group = this.groupsService.findOneGroup(+gid);
+                // const groupName = 'Soporte-' + randomUUID().split('-')[0];
+                // await this.#createGroupWhit(groupName, contact);
+                // const group = this.groupsService.findOneGroup(+gid);
 
-                let newGroup: Group;
-                if (!group) {
-                  newGroup = await this.groupsService.createGroup({
-                    id: +gid,
-                    description: 'agente',
-                    groupMembers: [contactDB.id],
-                    groupName,
-                  });
+                // let newGroup: Group;
+                // if (!group) {
+                //   newGroup = await this.groupsService.createGroup({
+                //     id: +gid,
+                //     description: 'agente',
+                //     groupMembers: [contactDB.id],
+                //     groupName,
+                //   });
 
-                  await this.groupsService.createGroupManagement(
-                    {
-                      permissions: 'all',
-                      status: 'active',
-                      role: 'admin',
-                      lastSeen: new Date(),
-                    },
-                    newGroup
-                  );
-                }
+                //   await this.groupsService.createGroupManagement(
+                //     {
+                //       permissions: 'all',
+                //       status: 'active',
+                //       role: 'admin',
+                //       lastSeen: new Date(),
+                //     },
+                //     newGroup
+                //   );
+                // }
 
                 // const {}: ChatId = await this.client.getCommonGroups(gid)[0];
                 // const actualChatGroup = await this.client.getChatById(actualgroup);
@@ -283,7 +318,6 @@ export class WebhookService {
                 //   await this.responsesService.findOnePredefinedResponseById(
                 //     responseId
                 //   );
-
 
                 this.contactConversationState[contactDB.id] =
                   ConversationState.process;
@@ -357,11 +391,12 @@ export class WebhookService {
     // Extract the menu options (order) from the rawMenu data
     return rawMenu.find(({ order }) => order == +text);
   }
-  async handleAction(contactDB: Contact, contact: WAWebJS.Contact) {
-    this.actionsMenu ??= await this.getActions();
 
-    console.log(this.actionsMenu, this.actionsMenu[actionId]);
-  }
+  // async handleAction(contactDB: Contact, contact: WAWebJS.Contact) {
+  //   this.actionsMenu ??= await this.getActions();
+
+  //   console.log(this.actionsMenu, this.actionsMenu[actionId]);
+  // }
 
   async getActions() {
     const rawActions = await this.responsesService.findActions();

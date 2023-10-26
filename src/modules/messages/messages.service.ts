@@ -6,18 +6,20 @@ import {
 } from '@nestjs/common/exceptions';
 import { InjectRepository } from '@nestjs/typeorm';
 
-import { Repository } from 'typeorm';
+import { Between, Repository } from 'typeorm';
 import { Client } from 'whatsapp-web.js';
 
 // import { PaginationDTO } from '../common/dto/pagination.dto';
 // import { User } from '../auth/entities/user.entity';
 import { Message } from './entities/message.entity';
-import { CreateMessageDto } from './dto';
+import { CreateMessageDto, UpdateScheduledMessageDto } from './dto';
 // import { TypeMessage } from './entities/typeMessage.entity';
 // import { Category, TypeCategory } from './entities/category.entity';
 // import { initialData } from '../seed/data/initialData';
 import { Contact } from '../contacts/entities/contact.entity';
 import { SendMessageDto } from '../webhook/dto';
+import { CreateScheduledMessageDto } from './dto/create-scheduled-message.dto';
+import { ScheduledMessage } from './entities';
 
 @Injectable()
 export class MessagesService {
@@ -29,7 +31,9 @@ export class MessagesService {
 
   constructor(
     @InjectRepository(Message)
-    private readonly messageRepository: Repository<Message>
+    private readonly messageRepository: Repository<Message>,
+    @InjectRepository(ScheduledMessage)
+    private readonly scheduledMessageRepository: Repository<ScheduledMessage>
   ) {}
 
   async create(
@@ -143,6 +147,133 @@ export class MessagesService {
     }
   }
 
+  async createScheduledMessage(
+    createScheduledMessageDto: CreateScheduledMessageDto
+  ) {
+    try {
+      const newScheduledMessage = this.scheduledMessageRepository.create(
+        createScheduledMessageDto
+      );
+      await this.scheduledMessageRepository.save(newScheduledMessage);
+
+      return {
+        message: 'Created scheduled message',
+        ...newScheduledMessage,
+      };
+    } catch (err) {
+      this.handleExceptions(err);
+    }
+  }
+
+  async findAll() {
+    try {
+      const scheduledMessages = await this.scheduledMessageRepository.findBy(
+        {}
+      );
+      return scheduledMessages;
+    } catch (err) {
+      this.handleExceptions(err);
+    }
+  }
+
+  async findAllByTimeRange(startTime: Date, endTime: Date) {
+    try {
+      const scheduledMessages = await this.scheduledMessageRepository.find({
+        where: {
+          scheduledTime: Between(startTime, endTime),
+          isActive: true,
+        },
+      });
+      return scheduledMessages;
+    } catch (err) {
+      this.handleExceptions(err);
+    }
+  }
+
+  async findOneScheduledMessage(id: number) {
+    try {
+      const scheduledMessage = await this.scheduledMessageRepository.findOneBy({
+        id,
+      });
+      return scheduledMessage;
+    } catch (err) {
+      this.handleExceptions(err);
+    }
+  }
+
+  async updateScheduledMessage(
+    id: number,
+    updateScheduledMessageDto: UpdateScheduledMessageDto
+  ) {
+    try {
+      const scheduledMessage = await this.findOneScheduledMessage(id);
+
+      if (!scheduledMessage) return;
+
+      const newScheduledMessage = await this.scheduledMessageRepository.preload(
+        {
+          ...scheduledMessage,
+          ...updateScheduledMessageDto,
+        }
+      );
+      await this.messageRepository.save(newScheduledMessage);
+
+      return newScheduledMessage;
+    } catch (err) {
+      this.handleExceptions(err);
+    }
+  }
+
+  async desactivateScheduledMessage(id: number) {
+    try {
+      const scheduledMessage = await this.findOneScheduledMessage(id);
+
+      if (!scheduledMessage) return;
+
+      const newScheduledMessage = await this.scheduledMessageRepository.preload(
+        {
+          ...scheduledMessage,
+          isActive: false,
+        }
+      );
+      await this.messageRepository.save(newScheduledMessage);
+
+      return newScheduledMessage;
+    } catch (err) {
+      this.handleExceptions(err);
+    }
+  }
+
+  async removeScheduledMessage(id: number) {
+    const { affected } = await this.scheduledMessageRepository.delete(id);
+    if (affected) return `predefined response whit id:${id} removed`;
+    return `predefined response whit id:${id} not found`;
+  }
+
+  // TODO: crear job que cada hora traiga de BD los scheduledMesages
+  async getScheduledMessagesByRangeTime() {
+    // TODO: crear jobs con los scheduledMesages de esa hora
+    const now = new Date();
+    const startTime = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+      now.getHours(),
+      now.getMinutes()
+    );
+    const endTime = new Date(startTime.getTime() + 60 * 59 * 1000);
+
+    const scheduledMessagesRange = await this.findAllByTimeRange(
+      startTime,
+      endTime
+    );
+    const single = scheduledMessagesRange.filter(({ frecuency }) => !frecuency);
+    const continouos = scheduledMessagesRange.filter(
+      ({ frecuency }) => frecuency
+    );
+    return { single, continouos };
+  }
+
   // async #responseMessageByState(client: Client, msg: WAWebJS.Message) {
   //   // const { from, to, body, reply, hasMedia } = msg;
   //   // let { data } = await this.getDBQuestionAnswer(user);
@@ -210,6 +341,16 @@ export class MessagesService {
 
   // #endregion methods
 }
+
+// *    *    *    *    *    *
+// ┬    ┬    ┬    ┬    ┬    ┬
+// │    │    │    │    │    │
+// │    │    │    │    │    └ day of week (0 - 7) (0 or 7 is Sun)
+// │    │    │    │    └───── month (1 - 12)
+// │    │    │    └────────── day of month (1 - 31)
+// │    │    └─────────────── hour (0 - 23)
+// │    └──────────────────── minute (0 - 59)
+// └───────────────────────── second (0 - 59, OPTIONAL)
 
 // async createQuery(createQueryMessageDto: CreateQueryMessageDto, user: User) {
 //   try {
