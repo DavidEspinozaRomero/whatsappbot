@@ -66,6 +66,7 @@ export class ContactsService {
       this.handleExceptions(err);
     }
   }
+
   async update(id: number, updateContactDto: UpdateContactDto) {
     return `This action updates a #${id} contact ${updateContactDto}`;
   }

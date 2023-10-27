@@ -1,4 +1,10 @@
-import { IsBoolean, IsDate, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsDate,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class CreateScheduledMessageDto {
   @IsString()
@@ -20,8 +26,8 @@ export class CreateScheduledMessageDto {
   @IsDate()
   scheduledTime: Date;
 
-  @IsString()
-  recipient: string;
+  @IsArray()
+  recipient: number[];
 
   @IsBoolean()
   @IsOptional()

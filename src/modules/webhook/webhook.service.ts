@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import {
   BadRequestException,
   InternalServerErrorException,
+  NotFoundException,
 } from '@nestjs/common/exceptions';
 
 import WAWebJS, { Client, LocalAuth } from 'whatsapp-web.js';
@@ -70,9 +71,9 @@ export class WebhookService {
         this.#handleScheduledMessages();
       });
 
-      this.client.on('group_join', async (args: any) => {
+      this.client.on('group_join', (args: any) => {
         console.log('group join');
-        console.log(args);
+        console.log({ args });
         // this.handleGroup(group);
       });
 
@@ -122,12 +123,16 @@ export class WebhookService {
   // #storageMedia() {}
 
   #handleScheduledMessages() {
-    // const cronHour = '0 * * * *';
-    scheduleJob('* * * * *', async () => {
+    // const cronEveryMin = '* * * * *';
+    // const cronEveryHour = '0 * * * *';
+    scheduleJob('0 * * * *', async () => {
       const scheduledMessages =
         await this.messagesService.getScheduledMessagesByRangeTime();
       const { single, continouos } = scheduledMessages;
+      console.count('job');
+      
       if (single) {
+        console.log(single);
         this.#scheduleMessages(single);
       }
       if (continouos) {
@@ -137,11 +142,16 @@ export class WebhookService {
   }
 
   #scheduleMessages(list: ScheduledMessage[]) {
-    list.forEach(({ content, scheduledTime, recipient, frecuency, id }) => {
-      scheduleJob(scheduledTime, async () => {
-        await this.sendMessageToContact({ id: +recipient, content });
+    list.forEach((scheduledMessage) => {
+      const { content, scheduledTime, recipient, frecuency, id } =
+        scheduledMessage;
+        if (!recipient) throw new NotFoundException(`recipient not found`);
+      scheduleJob(scheduledTime, () => {
+        recipient.forEach(async (contactId) => {
+          await this.sendMessageToContact({ id: contactId, content });
+        });
         if (frecuency) return;
-        this.messagesService.desactivateScheduledMessage(id);
+        this.messagesService.desactivateScheduledMessage(id, scheduledMessage);
       });
     });
   }

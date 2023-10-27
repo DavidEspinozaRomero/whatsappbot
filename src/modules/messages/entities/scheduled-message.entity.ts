@@ -7,11 +7,9 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
-// import { Contact } from '../../contacts/entities/contact.entity';
-// import { User } from '../../auth/entities/user.entity';
-
 @Entity('scheduledMessages')
 export class ScheduledMessage {
+  
   //#region Columns
   @PrimaryGeneratedColumn('increment')
   id: number;
@@ -41,10 +39,8 @@ export class ScheduledMessage {
   // @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   // updatedAt: Date;
 
-  // @Column('text', { array: true })
-  // recipient: string[]; // (contactsID)
-  @Column('text')
-  recipient: string; // (contactID)
+  @Column('int', { array: true, default: [] })
+  recipient: number[]; // (contactID)
 
   //#endregion Columns
 
